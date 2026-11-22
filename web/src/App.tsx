@@ -37,13 +37,14 @@ const PASOS = [
   { id: 'fin', label: 'Fin del viaje', description: 'Lo que sobra es suyo: lo retira a Bs por la rampa.' },
 ]
 
-const CONSUMOS = [
-  { mb: 25, label: 'Mensajes y mapas', sub: '25 MB' },
-  { mb: 51, label: 'Redes sociales', sub: '51 MB' },
-  { mb: 73, label: 'Un video corto', sub: '73 MB' },
+// Lo que hace la viajera en Brasil: cada uso es un video y, al terminar, un cobro real por sus megas.
+const USOS = [
+  { src: onb1, poster: onb1Poster, Icon: Camera, t: 'Redes sociales', d: 'Transmite en vivo al llegar', mb: 73 },
+  { src: onb2, poster: onb2Poster, Icon: MessageCircle, t: 'Familia', d: 'Le avisa a su papá que llegó', mb: 25 },
+  { src: onb3, poster: onb3Poster, Icon: MapPin, t: 'Mapas y apps de pago', d: 'Busca dónde comer cerca', mb: 51 },
 ]
 
-type Cobro = { mb: number; usdc: number; hash: string }
+type Cobro = { mb: number; usdc: number; hash: string; label?: string }
 
 export function App() {
   const [paso, setPaso] = useState(0)
@@ -59,6 +60,12 @@ export function App() {
   const [retirado, setRetirado] = useState<number | null>(null)
   // Recarga dentro del teléfono: 'qr' (se muestra el QR) → 'conv' (Bs se convierten a USDC) → null.
   const [recarga, setRecarga] = useState<null | 'qr' | 'conv'>(null)
+  // Paso Navega: qué video se ve (usoIdx) y cuántos usos ya se cobraron (cobrados).
+  const [usoIdx, setUsoIdx] = useState(0)
+  const [cobrados, setCobrados] = useState(0)
+  const mbRef = useRef(0)
+  const cobradosRef = useRef(0)
+  const cobrando = useRef(false)
   const auto = useRef(false)
 
   const refresh = useCallback(async (id: string) => {
@@ -93,14 +100,28 @@ export function App() {
   const autorizar = (k = kp, cap = Number(tope)) => run(`Firmando el tope de ${cap} USDC…`, async () => {
     add(await flow.approve(k, cap)); await refresh(k.publicKey()); setPaso(3)
   })
-  const consumir = (delta: number, k = kp, base = mb) => run(`Reportando ${delta} MB al contrato medidor…`, async () => {
-    const total = base + delta
+  const consumir = (delta: number, label?: string, k = kp) => run(delta > 0 ? `Cobrando ${delta} MB en Stellar…` : 'Repitiendo el último reporte…', async () => {
+    const total = mbRef.current + delta
     const t = await flow.charge(k.publicKey(), total, delta)
+    mbRef.current = total
     add(t); setMb(total)
-    if (delta > 0) setCobros(c => [{ mb: delta, usdc: delta * PRICE_MB, hash: t.hash }, ...c])
+    if (delta > 0) setCobros(c => [{ mb: delta, usdc: delta * PRICE_MB, hash: t.hash, label }, ...c])
     await refresh(k.publicKey())
     return total
   })
+
+  // Mientras Paola navega, cada uso (video) dispara su cobro. El video siguiente espera a que se confirme.
+  useEffect(() => {
+    if (paso !== 3 || !kp || usoIdx >= USOS.length) return
+    if (cobradosRef.current > usoIdx || cobrando.current) return
+    cobrando.current = true
+    const u = USOS[usoIdx]!
+    consumir(u.mb, u.t)
+      .catch(() => { /* el error ya se muestra; se sigue con el próximo uso */ })
+      .finally(() => { cobrando.current = false; cobradosRef.current = usoIdx + 1; setCobrados(usoIdx + 1) })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paso, kp, usoIdx])
+
   const retirar = (k = kp) => run('Retirando el sobrante a Bs…', async () => {
     const b = await flow.balance(k.publicKey())
     add(await flow.withdraw(k, b)); setRetirado(b); await refresh(k.publicKey()); setPaso(4)
@@ -112,14 +133,14 @@ export function App() {
       const k = await crear()
       await recargar(k)
       await autorizar(k, Number(tope))
-      let total = 0
-      for (const c of CONSUMOS) { if (!auto.current) return; total = await consumir(c.mb, k, total) }
+      // Los cobros los disparan los videos; se espera a que los tres usos estén cobrados.
+      for (let i = 0; i < 240 && cobradosRef.current < USOS.length; i++) { if (!auto.current) return; await sleep(500) }
       await retirar(k)
     } catch { /* el error ya se muestra */ } finally { auto.current = false }
   }
 
   const reiniciar = () => {
-    setPaso(0); setTxs([]); setKp(null); setSaldo(0); setPermiso(0); setMb(0); setCobros([]); setRetirado(null); setError(null)
+    setPaso(0); setTxs([]); setKp(null); setSaldo(0); setPermiso(0); setMb(0); setCobros([]); setRetirado(null); setError(null); setUsoIdx(0); setCobrados(0); mbRef.current = 0; cobradosRef.current = 0
   }
 
   const cobrado = useMemo(() => cobros.reduce((s, c) => s + c.usdc, 0), [cobros])
@@ -181,16 +202,18 @@ export function App() {
             )}
             {paso === 3 && (
               <>
-                <p>Simula consumo de datos. A {fmt(PRICE_MB, 3)} USDC por MB, cada reporte cobra solo lo nuevo.</p>
+                <p>Paola usa sus apps en Brasil. Cada uso se reporta al contrato y se cobra solo, a {fmt(PRICE_MB, 3)} USDC por MB.</p>
                 <div className="consumos">
-                  {CONSUMOS.map(c => (
-                    <button key={c.mb} type="button" className="consumo" onClick={() => consumir(c.mb)} disabled={!!busy}>
-                      <Wifi size={14} /><span><b>{c.label}</b><small>{c.sub} · {fmt(c.mb * PRICE_MB, 3)} USDC</small></span>
-                    </button>
+                  {USOS.map((u, k) => (
+                    <div key={u.t} className="consumo" data-estado={k < cobrados ? 'ok' : k === usoIdx ? 'ahora' : 'pendiente'}>
+                      <u.Icon size={14} />
+                      <span><b>{u.t}</b><small>{u.mb} MB · {fmt(u.mb * PRICE_MB, 3)} USDC</small></span>
+                      <em>{k < cobrados ? 'Cobrado' : k === usoIdx ? 'Usando datos…' : 'Pendiente'}</em>
+                    </div>
                   ))}
                 </div>
                 <div className="row-actions">
-                  <Button variant="secondary" size="sm" onClick={() => consumir(0)} disabled={!!busy || mb === 0}>Repetir el último reporte (no cobra)</Button>
+                  <Button variant="secondary" size="sm" onClick={() => { void consumir(0).catch(() => {}) }} disabled={!!busy || mb === 0}>Repetir el último reporte (no cobra)</Button>
                   <Button size="sm" onClick={() => retirar()} disabled={!!busy}><Landmark size={14} /> Terminar el viaje</Button>
                 </div>
               </>
@@ -210,7 +233,7 @@ export function App() {
           <Phone width={300}>
             <AppScreen paso={paso} saldo={saldo} permiso={permiso} mb={mb} cobrado={cobrado} cobros={cobros} retirado={retirado} wallet={kp?.publicKey()} recarga={recarga} onRecargar={paso === 1 && !busy ? () => { void recargar().catch(() => {}) } : undefined} />
           </Phone>
-          <UsoEnVivo activa={paso === 3} />
+          <UsoEnVivo activa={paso === 3} idx={usoIdx} puedeAvanzar={cobrados > usoIdx || usoIdx >= USOS.length} onFin={() => setUsoIdx(i => i + 1)} />
         </section>
 
         <section className="panel log">
@@ -281,7 +304,7 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
       {paso === 1 && (
         <button type="button" className="app-btn app-recargar" onClick={onRecargar} disabled={!onRecargar}><QrCode size={12} /> Recargar</button>
       )}
-      <div className="chip-wrap" aria-hidden="true">
+      <div className="chip-wrap" data-chico={paso >= 3 || undefined} aria-hidden="true">
         <div className="chip">
           <img src={chip} alt="" />
           <span className="chip-flag"><BanderaBR /></span>
@@ -305,9 +328,9 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
           <p className="app-label">Cobros en Stellar</p>
           {cobros.length === 0 && <p className="app-note">Todavía no hay cobros.</p>}
           {cobros.map(c => (
-            <div className="app-row" key={c.hash}>
+            <div className="app-row nuevo" key={c.hash}>
               <span className="app-ico"><Wifi size={11} /></span>
-              <span className="app-row-t"><b>{c.mb} MB</b><small>{c.hash.slice(0, 6)}…</small></span>
+              <span className="app-row-t"><b>{c.label ?? `${c.mb} MB`}</b><small>{c.mb} MB · {c.hash.slice(0, 6)}…</small></span>
               <span className="app-neg">− {fmt(c.usdc, 3)}</span>
             </div>
           ))}
@@ -405,35 +428,41 @@ function Ruta({ llego }: { llego: boolean }) {
   )
 }
 
-/** Lo que hace la viajera en Brasil mientras navega: un segundo teléfono con videos de la app en uso. */
-const USOS = [
-  { src: onb1, poster: onb1Poster, Icon: Camera, t: 'Redes sociales', d: 'Transmite en vivo al llegar' },
-  { src: onb2, poster: onb2Poster, Icon: MessageCircle, t: 'Familia', d: 'Le avisa a su papá que llegó' },
-  { src: onb3, poster: onb3Poster, Icon: MapPin, t: 'Mapas y apps de pago', d: 'Busca dónde comer cerca' },
-]
-
-function UsoEnVivo({ activa }: { activa: boolean }) {
-  const [n, setN] = useState(0)
+/** Segundo teléfono: la viajera usando sus apps. Los megas suben mientras corre el video. */
+function UsoEnVivo({ activa, idx, puedeAvanzar, onFin }: { activa: boolean; idx: number; puedeAvanzar: boolean; onFin: () => void }) {
   const ref = useRef<HTMLVideoElement>(null)
-  const uso = USOS[n % USOS.length]!
+  const [progreso, setProgreso] = useState(0)
+  const uso = USOS[idx % USOS.length]!
+  const primeraVuelta = idx < USOS.length
   useEffect(() => {
     const v = ref.current
     if (!v) return
+    setProgreso(0)
     if (activa) { v.currentTime = 0; void v.play().catch(() => {}) } else v.pause()
-  }, [activa, n])
+  }, [activa, idx])
+  const fin = () => {
+    // Si el cobro de este uso todavía viaja a Stellar, el video se repite hasta que se confirme.
+    if (puedeAvanzar) onFin()
+    else { const v = ref.current; if (v) { v.currentTime = 0; void v.play().catch(() => {}) } }
+  }
+  const mbVivo = primeraVuelta ? Math.max(1, Math.round(Math.max(progreso, puedeAvanzar ? 1 : 0) * uso.mb)) : null
   return (
     <div className="uso" data-on={activa || undefined} aria-hidden={!activa}>
       <div className="phone uso-phone">
         <div className="phone-screen">
-          <video ref={ref} key={uso.src} src={uso.src} poster={uso.poster} muted playsInline preload="auto" onEnded={() => setN(x => x + 1)} />
-          <div className="uso-datos"><Wifi size={11} /> <TextShimmer>Usando datos</TextShimmer></div>
+          <video ref={ref} key={uso.src} src={uso.src} poster={uso.poster} muted playsInline preload="auto"
+            onTimeUpdate={e => { const v = e.currentTarget; if (v.duration) setProgreso(p => Math.max(p, v.currentTime / v.duration)) }} onEnded={fin} />
+          <div className="uso-datos">
+            <Wifi size={12} />
+            {mbVivo !== null ? <><b>{mbVivo} MB</b><span>{puedeAvanzar ? 'cobrados' : 'usando datos…'}</span></> : <span>Sigue navegando</span>}
+          </div>
         </div>
       </div>
       <div className="uso-cap">
         <span className="burbuja-ico"><uso.Icon size={14} /></span>
         <span><b>{uso.t}</b><small>{uso.d}</small></span>
       </div>
-      <div className="uso-dots">{USOS.map((u, k) => <span key={u.t} data-on={k === n % USOS.length || undefined} />)}</div>
+      <div className="uso-dots">{USOS.map((u, k) => <span key={u.t} data-on={k === idx % USOS.length || undefined} />)}</div>
     </div>
   )
 }
