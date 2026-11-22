@@ -224,7 +224,6 @@ export function App() {
             <li>Un reporte repetido <b>no cobra dos veces</b>: el contrato cobra sobre el consumo acumulado.</li>
           </ul>
         </div>
-        <div className="chip-wrap" aria-hidden="true"><img src={chip} alt="" className="chip" /></div>
         <div className="panel">
           <h2>Verificable</h2>
           <div className="ids">
@@ -259,6 +258,7 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
         <strong className="app-big"><AnimatedCounter value={+saldo.toFixed(3)} decimals={3} suffix={`${NBSP}USDC`} locale="es-BO" /></strong>
         <span className="app-sub">{wallet ? `Billetera ${wallet.slice(0, 4)}…${wallet.slice(-4)}` : 'Sin billetera todavía'}</span>
       </div>
+      <div className="chip-wrap" aria-hidden="true"><img src={chip} alt="" className="chip" /></div>
       <div className="app-card">
         <div className="app-two">
           <span><span className="app-cap">Consumido</span><strong className="app-mid">{mb} MB</strong></span>
@@ -276,7 +276,7 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
         <>
           <p className="app-label">Cobros en Stellar</p>
           {cobros.length === 0 && <p className="app-note">Todavía no hay cobros.</p>}
-          {cobros.slice(0, 4).map(c => (
+          {cobros.slice(0, 3).map(c => (
             <div className="app-row" key={c.hash}>
               <span className="app-ico"><Wifi size={11} /></span>
               <span className="app-row-t"><b>{c.mb} MB</b><small>{c.hash.slice(0, 6)}…</small></span>
