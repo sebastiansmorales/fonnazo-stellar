@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Car, Check, ExternalLink, Home, Landmark, User, MapPin, MessageCircle, Music, Plane, Play, QrCode, RotateCcw, ShieldCheck, Wallet, Wifi } from 'lucide-react'
+import { Camera, Check, ExternalLink, Home, Landmark, User, MapPin, MessageCircle, Plane, Play, QrCode, RotateCcw, ShieldCheck, Wallet, Wifi } from 'lucide-react'
 import { Badge } from './arc/vendor/badge/badge'
 import { Button } from './arc/vendor/button/button'
 import { Stepper } from './arc/vendor/stepper/stepper'
@@ -11,6 +11,12 @@ import { Phone } from './parts/Phone'
 import logo from './logo.png'
 import chip from './chip.png'
 import qrPago from './qr-pago.svg'
+import onb1 from './videos/onb1.mp4'
+import onb2 from './videos/onb2.mp4'
+import onb3 from './videos/onb3.mp4'
+import onb1Poster from './videos/onb1.jpg'
+import onb2Poster from './videos/onb2.jpg'
+import onb3Poster from './videos/onb3.jpg'
 import { DEMO } from './demo-config'
 import { contractUrl, accountUrl, createFlow, txUrl, type Tx } from './flow'
 import lastRun from './last-run.json'
@@ -201,10 +207,10 @@ export function App() {
         </section>
 
         <section className="phone-col">
-          <Actividad activa={paso === 3} />
           <Phone width={300}>
             <AppScreen paso={paso} saldo={saldo} permiso={permiso} mb={mb} cobrado={cobrado} cobros={cobros} retirado={retirado} wallet={kp?.publicKey()} recarga={recarga} onRecargar={paso === 1 && !busy ? () => { void recargar().catch(() => {}) } : undefined} />
           </Phone>
+          <UsoEnVivo activa={paso === 3} />
         </section>
 
         <section className="panel log">
@@ -399,30 +405,35 @@ function Ruta({ llego }: { llego: boolean }) {
   )
 }
 
-/** Lo que hace la viajera en Brasil mientras navega: burbujas que aparecen a los lados del teléfono. */
-const ACTIVIDADES = [
-  { Icon: MessageCircle, t: 'Avisa a su familia que llegó', mb: '2 MB' },
-  { Icon: MapPin, t: 'Busca su hotel en el mapa', mb: '6 MB' },
-  { Icon: Car, t: 'Pide un taxi por app', mb: '3 MB' },
-  { Icon: Camera, t: 'Sube una foto de la Paulista', mb: '14 MB' },
-  { Icon: Music, t: 'Escucha música en el metro', mb: '9 MB' },
+/** Lo que hace la viajera en Brasil mientras navega: un segundo teléfono con videos de la app en uso. */
+const USOS = [
+  { src: onb1, poster: onb1Poster, Icon: Camera, t: 'Redes sociales', d: 'Transmite en vivo al llegar' },
+  { src: onb2, poster: onb2Poster, Icon: MessageCircle, t: 'Familia', d: 'Le avisa a su papá que llegó' },
+  { src: onb3, poster: onb3Poster, Icon: MapPin, t: 'Mapas y apps de pago', d: 'Busca dónde comer cerca' },
 ]
 
-function Actividad({ activa }: { activa: boolean }) {
+function UsoEnVivo({ activa }: { activa: boolean }) {
   const [n, setN] = useState(0)
+  const ref = useRef<HTMLVideoElement>(null)
+  const uso = USOS[n % USOS.length]!
   useEffect(() => {
-    if (!activa) return
-    const t = window.setInterval(() => setN(x => x + 1), 2200)
-    return () => window.clearInterval(t)
-  }, [activa])
-  if (!activa) return null
-  const a = ACTIVIDADES[n % ACTIVIDADES.length]!
+    const v = ref.current
+    if (!v) return
+    if (activa) { v.currentTime = 0; void v.play().catch(() => {}) } else v.pause()
+  }, [activa, n])
   return (
-    <div className="actividad" aria-hidden="true">
-      <div key={n} className="burbuja" data-lado={n % 2 === 0 ? 'izq' : 'der'}>
-        <span className="burbuja-ico"><a.Icon size={14} /></span>
-        <span><b>{a.t}</b><small>{a.mb} · São Paulo</small></span>
+    <div className="uso" data-on={activa || undefined} aria-hidden={!activa}>
+      <div className="phone uso-phone">
+        <div className="phone-screen">
+          <video ref={ref} key={uso.src} src={uso.src} poster={uso.poster} muted playsInline preload="auto" onEnded={() => setN(x => x + 1)} />
+          <div className="uso-datos"><Wifi size={11} /> <TextShimmer>Usando datos</TextShimmer></div>
+        </div>
       </div>
+      <div className="uso-cap">
+        <span className="burbuja-ico"><uso.Icon size={14} /></span>
+        <span><b>{uso.t}</b><small>{uso.d}</small></span>
+      </div>
+      <div className="uso-dots">{USOS.map((u, k) => <span key={u.t} data-on={k === n % USOS.length || undefined} />)}</div>
     </div>
   )
 }

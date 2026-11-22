@@ -13,7 +13,7 @@ body { background: #0d0616; }
     #0d0616;
   padding: 0 24px 40px;
 }
-.demo > * { max-width: 1180px; margin-inline: auto; }
+.demo > * { max-width: 1300px; margin-inline: auto; }
 
 .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; }
 .top-logo { height: 30px; width: auto; }
@@ -215,3 +215,24 @@ details.evidence ol { margin: 8px 0 0; padding-left: 20px; display: grid; grid-t
 .conv-arrow[data-on] span:nth-child(3) { animation-delay: .36s; }
 @keyframes flujo { 0%, 100% { background: rgb(255 255 255 / 20%); transform: scale(1); } 40% { background: #ff7a33; transform: scale(1.5); } 70% { background: #a21ceb; } }
 @media (prefers-reduced-motion: reduce) { .app-recargar, .conv-arrow span { animation: none !important; } .sheet { transition: none; } }
+
+/* Segundo teléfono (paso Navega): videos de la viajera usando apps. Se abre al lado del primero. */
+.phone-col { align-items: flex-start; gap: 0; }
+.uso { display: grid; justify-items: center; gap: 10px; width: 0; opacity: 0; margin-top: 46px; overflow: hidden; transform: translateX(-20px) rotate(0deg); pointer-events: none;
+  transition: width .55s var(--ease-enter), opacity .45s var(--ease-enter), transform .55s var(--ease-enter), margin .55s var(--ease-enter); }
+.uso[data-on] { width: 212px; opacity: 1; margin-left: 18px; transform: none; overflow: visible; pointer-events: auto; }
+.uso-phone { width: 200px; padding: 6px; border-radius: 32px; transform: rotate(3deg); }
+.uso-phone .phone-screen { border-radius: 26px; aspect-ratio: 9 / 16; }
+.uso-phone video { display: block; width: 100%; height: 100%; object-fit: cover; }
+.uso-datos { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 99px; font-size: 10.5px; white-space: nowrap; color: #fff;
+  background: rgb(13 6 22 / 78%); border: 1px solid rgb(255 255 255 / 16%); backdrop-filter: blur(8px); }
+.uso-cap { display: flex; align-items: center; gap: 9px; padding: 7px 14px 7px 7px; border-radius: 999px; background: var(--glass); border: 1px solid var(--border); white-space: nowrap; margin-top: 6px; }
+.uso-cap span:last-child { display: grid; text-align: left; }
+.uso-cap b { font-size: 12.5px; font-weight: 500; color: #fff; line-height: 1.2; }
+.uso-cap small { font-size: 11px; color: #b9a6dd; line-height: 1.2; }
+.uso-dots { display: flex; gap: 5px; }
+.uso-dots span { width: 6px; height: 6px; border-radius: 9px; background: rgb(255 255 255 / 18%); transition: background .2s, width .2s; }
+.uso-dots span[data-on] { width: 16px; background: #b57bff; }
+@media (max-width: 1060px) { .phone-col { flex-wrap: wrap; justify-content: center; } }
+@media (max-width: 720px) { .uso[data-on] { margin: 16px 0 0; } }
+@media (prefers-reduced-motion: reduce) { .uso { transition: none; } }
