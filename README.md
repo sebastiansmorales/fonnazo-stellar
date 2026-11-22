@@ -1,4 +1,4 @@
-# Fonnazo · Datos móviles que se pagan por MB
+# Fonnazo · Internet en el exterior que se paga por MB, con USDC
 
 Proyecto de Fonnazo para el National Startups Hackathon 2026, construido sobre **Stellar testnet**.
 

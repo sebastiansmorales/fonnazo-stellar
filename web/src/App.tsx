@@ -117,7 +117,7 @@ export function App() {
 
       <section className="hero">
         <p className="kicker">Demo en vivo · National Startups Hackathon 2026</p>
-        <h1 className="title-xl">Datos móviles que se pagan <span className="grad">por MB</span></h1>
+        <h1 className="title-xl">Internet en el exterior que se paga <span className="grad">por MB, con USDC</span></h1>
         <p className="lede">
           El viajero recarga en bolivianos y un contrato en Stellar le cobra solo los megas que usa. Cada botón de
           esta página firma una transacción real en Stellar testnet.
