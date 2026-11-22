@@ -1,0 +1,8 @@
+{
+  "name": "fonnazo-reporter",
+  "private": true,
+  "type": "module",
+  "scripts": { "demo": "tsx reporter.ts --demo", "start": "tsx reporter.ts" },
+  "dependencies": { "@stellar/stellar-sdk": "17.4.0" },
+  "devDependencies": { "tsx": "^4.19.0" }
+}

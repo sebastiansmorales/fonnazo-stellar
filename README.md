@@ -32,6 +32,18 @@ cargo test
 stellar contract build
 ```
 
+## El reporter de consumo
+
+Código en [`reporter/`](reporter/reporter.ts). Es el servicio que convierte el consumo de la eSIM en cobros: consulta cada cierto tiempo los bytes acumulados que informa el proveedor de la eSIM y llama a `charge(user, country, cumulative_bytes)` cuando avanzaron. Es la versión reducida del servicio del piloto; las credenciales del proveedor van por variables de entorno.
+
+```bash
+cd reporter
+npm install
+npm run demo     # crea una billetera, simula una eSIM que consume datos y la cobra en testnet
+```
+
+Salida de una corrida real de `npm run demo` (22-nov-2026): tres cobros de 20 MB ([1](https://stellar.expert/explorer/testnet/tx/e6ea6d91580ca3c22815a42e06392224f80afe7af6c390d32402334b3b48d345), [2](https://stellar.expert/explorer/testnet/tx/35ac29861df4c81de2865d412bbf883667865f50382a533548681dcbbfdf8b01), [3](https://stellar.expert/explorer/testnet/tx/6c4b2ce88bf8d5ccf8334335160054458e586d025bd0e6321778a146129e74a3)) y una cuarta consulta sin consumo nuevo, que no cobró.
+
 ## La demo web
 
 Código en [`web/`](web) (React + Vite). Es una página estática sin backend: usa el SDK de Stellar en el navegador y firma con cuentas de demostración. El sitio compilado está en [`docs/`](docs), que es lo que publica GitHub Pages.
