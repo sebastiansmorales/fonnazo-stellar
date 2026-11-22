@@ -1,5 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
-import { Check, ExternalLink, Landmark, Play, QrCode, RotateCcw, ShieldCheck, Wallet, Wifi } from 'lucide-react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Camera, Car, Check, ExternalLink, Landmark, MapPin, MessageCircle, Music, Plane, Play, QrCode, RotateCcw, ShieldCheck, Wallet, Wifi } from 'lucide-react'
 import { Badge } from './arc/vendor/badge/badge'
 import { Button } from './arc/vendor/button/button'
 import { Stepper } from './arc/vendor/stepper/stepper'
@@ -191,7 +191,8 @@ export function App() {
         </section>
 
         <section className="phone-col">
-          <Phone width={260}>
+          <Actividad activa={paso === 3} />
+          <Phone width={280}>
             <AppScreen paso={paso} saldo={saldo} permiso={permiso} mb={mb} cobrado={cobrado} cobros={cobros} retirado={retirado} wallet={kp?.publicKey()} />
           </Phone>
         </section>
@@ -252,13 +253,18 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
     <>
       <div className="app-status"><span>9:41</span><span className="app-island" /><span className="app-status-icons">●●●</span></div>
       <div className="app-top"><span>{paso >= 3 ? 'Mi eSIM' : 'Saldo'}</span></div>
-      {paso >= 3 && <div className="app-pill-ok"><span className="app-dot ok" />Conectado en Brasil</div>}
+      <Ruta llego={paso >= 3} />
       <div className="app-card grad-card">
         <span className="app-cap">Tu saldo</span>
         <strong className="app-big"><AnimatedCounter value={+saldo.toFixed(3)} decimals={3} suffix={`${NBSP}USDC`} locale="es-BO" /></strong>
         <span className="app-sub">{wallet ? `Billetera ${wallet.slice(0, 4)}…${wallet.slice(-4)}` : 'Sin billetera todavía'}</span>
       </div>
-      <div className="chip-wrap" aria-hidden="true"><img src={chip} alt="" className="chip" /></div>
+      <div className="chip-wrap" aria-hidden="true">
+        <div className="chip">
+          <img src={chip} alt="" />
+          <span className="chip-flag"><BanderaBR /></span>
+        </div>
+      </div>
       <div className="app-card">
         <div className="app-two">
           <span><span className="app-cap">Consumido</span><strong className="app-mid">{mb} MB</strong></span>
@@ -286,6 +292,69 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
         </>
       )}
     </>
+  )
+}
+
+/* Banderas en SVG: se ven igual en cualquier sistema (los emoji de bandera no existen en Windows). */
+function BanderaBR() {
+  return (
+    <svg viewBox="0 0 28 20" aria-hidden="true">
+      <rect width="28" height="20" fill="#009c3b" />
+      <path d="M14 2.6 25.2 10 14 17.4 2.8 10Z" fill="#ffdf00" />
+      <circle cx="14" cy="10" r="4.3" fill="#002776" />
+      <path d="M9.9 9.1c2.9-.5 5.9.1 8.3 1.7" stroke="#fff" strokeWidth=".9" fill="none" />
+    </svg>
+  )
+}
+function BanderaBO() {
+  return (
+    <svg viewBox="0 0 28 20" aria-hidden="true">
+      <rect width="28" height="6.7" fill="#d52b1e" /><rect y="6.7" width="28" height="6.6" fill="#f9e300" /><rect y="13.3" width="28" height="6.7" fill="#007934" />
+    </svg>
+  )
+}
+
+/** La viajera: sale de Santa Cruz y llega a São Paulo. El avión vuela hasta que empieza a navegar. */
+function Ruta({ llego }: { llego: boolean }) {
+  return (
+    <div className="ruta" data-llego={llego || undefined}>
+      <div className="ruta-line">
+        <span className="ruta-flag"><BanderaBO /></span>
+        <span className="ruta-track"><span className="ruta-plane"><Plane size={12} /></span></span>
+        <span className="ruta-flag"><BanderaBR /></span>
+      </div>
+      <span className="ruta-text">
+        {llego ? <><span className="app-dot ok" /> Carla, de Santa Cruz, ya está en São Paulo</> : 'Carla viaja de Santa Cruz a São Paulo'}
+      </span>
+    </div>
+  )
+}
+
+/** Lo que hace la viajera en Brasil mientras navega: burbujas que aparecen a los lados del teléfono. */
+const ACTIVIDADES = [
+  { Icon: MessageCircle, t: 'Avisa a su familia que llegó', mb: '2 MB' },
+  { Icon: MapPin, t: 'Busca su hotel en el mapa', mb: '6 MB' },
+  { Icon: Car, t: 'Pide un taxi por app', mb: '3 MB' },
+  { Icon: Camera, t: 'Sube una foto de la Paulista', mb: '14 MB' },
+  { Icon: Music, t: 'Escucha música en el metro', mb: '9 MB' },
+]
+
+function Actividad({ activa }: { activa: boolean }) {
+  const [n, setN] = useState(0)
+  useEffect(() => {
+    if (!activa) return
+    const t = window.setInterval(() => setN(x => x + 1), 2200)
+    return () => window.clearInterval(t)
+  }, [activa])
+  if (!activa) return null
+  const a = ACTIVIDADES[n % ACTIVIDADES.length]!
+  return (
+    <div className="actividad" aria-hidden="true">
+      <div key={n} className="burbuja" data-lado={n % 2 === 0 ? 'izq' : 'der'}>
+        <span className="burbuja-ico"><a.Icon size={14} /></span>
+        <span><b>{a.t}</b><small>{a.mb} · São Paulo</small></span>
+      </div>
+    </div>
   )
 }
 
