@@ -296,10 +296,16 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
       </div>
       <div className="app-scroll">
       <Ruta llego={paso >= 3} />
-      <div className="app-card grad-card">
-        <span className="app-cap">Tu saldo</span>
-        <strong className="app-big"><AnimatedCounter value={+saldo.toFixed(3)} decimals={3} suffix={`${NBSP}USDC`} locale="es-BO" /></strong>
-        <span className="app-sub">{wallet ? `Billetera ${wallet.slice(0, 4)}…${wallet.slice(-4)}` : 'Sin billetera todavía'}</span>
+      <div className="app-card saldo-card">
+        <div className="saldo-main">
+          <span className="app-cap">Tu saldo</span>
+          <strong className="app-big"><AnimatedCounter value={+saldo.toFixed(3)} decimals={3} suffix={`${NBSP}USDC`} locale="es-BO" /></strong>
+          <span className="app-sub">{wallet ? `Billetera ${wallet.slice(0, 4)}…${wallet.slice(-4)}` : 'Sin billetera todavía'}</span>
+        </div>
+        <div className="saldo-logos" aria-label="USDC sobre Stellar">
+          <span><LogoUSDC /><small>USDC</small></span>
+          <span><LogoStellar /><small>Stellar</small></span>
+        </div>
       </div>
       {paso === 1 && (
         <button type="button" className="app-btn app-recargar" onClick={onRecargar} disabled={!onRecargar}><QrCode size={12} /> Recargar</button>
@@ -390,6 +396,31 @@ function Recarga({ fase }: { fase: null | 'qr' | 'conv' }) {
         </>
       )}
     </div>
+  )
+}
+
+/* Marcas del saldo: USDC y la red Stellar. */
+function LogoUSDC() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="16" fill="#2775ca" />
+      <path fill="#fff" d="M20.4 18.5c0-2.3-1.4-3.1-4.2-3.4-2-.3-2.4-.8-2.4-1.7s.7-1.5 2-1.5c1.2 0 1.9.4 2.2 1.4.1.2.3.3.5.3h1c.3 0 .5-.2.5-.5v-.1c-.3-1.5-1.5-2.6-3.1-2.8V8.7c0-.3-.2-.5-.6-.6h-1c-.3 0-.5.2-.6.6v1.5c-2 .3-3.3 1.6-3.3 3.3 0 2.2 1.3 3 4.1 3.4 1.9.3 2.5.7 2.5 1.8s-.9 1.8-2.2 1.8c-1.700 0-2.300-.700-2.500-1.700-.100-.300-.300-.400-.500-.400h-1.100c-.300 0-.500.200-.500.500v.100c.300 1.700 1.300 2.900 3.500 3.200v1.600c0 .300.200.500.600.600h1c.300 0 .500-.200.600-.600v-1.600c2-.300 3.300-1.700 3.300-3.500z" />
+      <path fill="#fff" d="M12.800 25.300c-5.200-1.900-7.900-7.700-5.900-12.800 1-2.800 3.200-4.900 5.900-5.900.300-.100.400-.300.400-.700V5c0-.300-.100-.500-.400-.600-.100 0-.200 0-.300.100-6.300 2-9.800 8.700-7.800 15 1.200 3.700 4.100 6.600 7.800 7.800.300.100.600 0 .700-.300.100-.100.100-.200.100-.300v-.900c0-.200-.200-.500-.500-.500zm6.700-20.800c-.300-.100-.600 0-.700.300-.100.100-.100.200-.100.300v.900c0 .300.200.500.400.700 5.200 1.900 7.900 7.700 5.900 12.800-1 2.800-3.200 4.900-5.900 5.900-.300.100-.400.300-.400.700v.900c0 .300.100.500.400.600.100 0 .200 0 .300-.100 6.300-2 9.800-8.700 7.800-15-1.200-3.800-4.200-6.700-7.700-8z" />
+    </svg>
+  )
+}
+function LogoStellar() {
+  // Marca de Stellar simplificada: un anillo atravesado por dos trazos diagonales.
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true">
+      <circle cx="16" cy="16" r="16" fill="#fff" />
+      <g fill="none" stroke="#0d0616" strokeWidth="2.3" strokeLinecap="round">
+        <path d="M9.300 19.200a7.300 7.300 0 0 1 12.900-6.400" />
+        <path d="M22.700 12.800a7.300 7.300 0 0 1-12.900 6.400" />
+        <path d="M5.500 18.600 26.500 8.400" />
+        <path d="M5.500 23.600 26.500 13.400" />
+      </g>
+    </svg>
   )
 }
 

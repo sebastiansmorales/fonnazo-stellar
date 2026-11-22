@@ -253,3 +253,12 @@ div.consumo { cursor: default; }
 .app-row.nuevo { animation: cobro-nuevo .6s var(--ease-enter) both; }
 @keyframes cobro-nuevo { from { opacity: 0; transform: translateY(-8px); background: rgb(124 58 237 / 45%); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { .app-row.nuevo { animation: none; } }
+
+/* Tarjeta del saldo: sin gradiente, con las marcas de USDC y Stellar a la derecha. */
+.saldo-card { flex-direction: row !important; align-items: center; justify-content: space-between; gap: 10px; padding: 13px 14px; }
+.saldo-main { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.saldo-card .app-big, .saldo-card .app-big [class*='value'] { font-size: 23px; }
+.saldo-logos { display: grid; gap: 7px; flex: none; }
+.saldo-logos span { display: flex; align-items: center; gap: 6px; }
+.saldo-logos svg { width: 22px; height: 22px; display: block; border-radius: 99px; }
+.saldo-logos small { font-size: 9.5px; color: #c9bbe6; font-weight: 500; }
