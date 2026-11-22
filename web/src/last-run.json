@@ -1,0 +1,42 @@
+{
+ "at": "2026-11-22T04:30:13.304Z",
+ "wallet": "GAKPUIHKMHIVI5WHCBLVJM3Q6TY2MRPC5FCJFTHWCVWPLIFGVKAHMR23",
+ "txs": [
+  {
+   "hash": "dd9b12e3d1e5e26726f0a1ca4f7822b28269c828b83278bbbc4ceee0adb56bb6",
+   "what": "Cuenta creada en testnet"
+  },
+  {
+   "hash": "03e0a4c2b4d07eef63f200be62ea2311bae00713c1909ce35a4489fe8df1f40a",
+   "what": "La billetera acepta USDC"
+  },
+  {
+   "hash": "adf27dbc68184412a6f3dda2943a9ee5a216ed60aa76394e94fa00c21724a5e7",
+   "what": "Recarga de 10.00 USDC"
+  },
+  {
+   "hash": "a1e719fb18cfe2cb634f93bf869a7ca02d00e4c0c43475292cf3805afa153b9e",
+   "what": "Tope de gasto: 5 USDC"
+  },
+  {
+   "hash": "01b6f09e049d43cf4b90219b44fe5a270ff5e353d62cdbab4f9025161a959d78",
+   "what": "Cobro de 25 MB"
+  },
+  {
+   "hash": "22f9e85240e78aa6409c081541f42a43a7ae7359e8276cbf744a3e819092421f",
+   "what": "Cobro de 51 MB"
+  },
+  {
+   "hash": "f30e479de2fc125ffdf0e0c33341ae41e8370e03c75e98439a4b434eafb8903d",
+   "what": "Cobro de 73 MB"
+  },
+  {
+   "hash": "a20581c22e877e29ecbf6051dbad78b696d22d596672a7dc9fd01ffb94f9b097",
+   "what": "Reporte repetido (no cobra)"
+  },
+  {
+   "hash": "567ddc347cf8b90a77c4b2e49f004312b9dc5f115df0f174bff36d7ca17f8c79",
+   "what": "Retiro de 9.40 USDC a Bs"
+  }
+ ]
+}

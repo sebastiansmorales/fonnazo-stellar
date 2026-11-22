@@ -1,0 +1,22 @@
+/* Ajustes de tokens de Arc para la consola, iguales para todo tenant. Sólo tokens. Los dos selectores
+   pesan (0,2,0): le ganan al [data-arc] de foundation.css sin depender del orden de carga. */
+
+/* El de fábrica, oklch(59%), da 4,1:1 sobre blanco: bajo el 4,5:1 que Arc pide para texto. Éste, 5,06:1. */
+[data-arc]:not([data-theme='dark']) {
+  --text-muted: oklch(54% 0 0);
+}
+
+/* El color del panel de contenido en el aspecto claro, el fondo sobre el que va cada pantalla. Lo que
+   antes se teñía con transparencia se mezcla contra él: queda del mismo color, y opaco, sin dejar ver el
+   campo de puntos que va detrás. En el oscuro el fondo es un gradiente, y no hay un color que nombrar. */
+[data-arc]:not([data-theme='dark']) {
+  --canvas: oklch(100% 0 0);
+}
+
+/* En pantallas táctiles los controles miden 44 px o más, como indica el autor. */
+@media (pointer: coarse) {
+  [data-arc]:not([data-arc-density]) {
+    --control-height-md: 2.75rem;
+    --control-height-lg: 3rem;
+  }
+}
