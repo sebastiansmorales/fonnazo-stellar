@@ -337,7 +337,7 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
             <div className="app-row nuevo" key={c.hash}>
               <span className="app-ico"><Wifi size={11} /></span>
               <span className="app-row-t"><b>{c.label ?? `${c.mb} MB`}</b><small>{c.mb} MB · {c.hash.slice(0, 6)}…</small></span>
-              <span className="app-neg">− {fmt(c.usdc, 3)}</span>
+              <span className="app-neg">− {fmt(c.usdc, 3)} USDC</span>
             </div>
           ))}
         </>
