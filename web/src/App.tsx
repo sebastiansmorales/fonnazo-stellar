@@ -10,6 +10,7 @@ import SegmentedControl from './arc/vendor/segmented-control/segmented-control'
 import { Phone } from './parts/Phone'
 import logo from './logo.png'
 import chip from './chip.png'
+import qrPago from './qr-pago.svg'
 import { DEMO } from './demo-config'
 import { contractUrl, accountUrl, createFlow, txUrl, type Tx } from './flow'
 import lastRun from './last-run.json'
@@ -19,6 +20,7 @@ const sdk = (window as any).StellarSdk
 const flow = createFlow(sdk)
 const NBSP = ' '
 const PRICE_MB = DEMO.pricePerGb / 1000
+const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
 const fmt = (n: number, d = 2) => n.toLocaleString('es-BO', { minimumFractionDigits: d, maximumFractionDigits: d })
 
 const PASOS = [
@@ -49,6 +51,8 @@ export function App() {
   const [mb, setMb] = useState(0)
   const [cobros, setCobros] = useState<Cobro[]>([])
   const [retirado, setRetirado] = useState<number | null>(null)
+  // Recarga dentro del teléfono: 'qr' (se muestra el QR) → 'conv' (Bs se convierten a USDC) → null.
+  const [recarga, setRecarga] = useState<null | 'qr' | 'conv'>(null)
   const auto = useRef(false)
 
   const refresh = useCallback(async (id: string) => {
@@ -68,8 +72,17 @@ export function App() {
     setKp(r.kp); add(r.txs); await refresh(r.kp.publicKey()); setPaso(1)
     return r.kp
   })
-  const recargar = (k = kp) => run('Pago confirmado · enviando 10 USDC a la billetera…', async () => {
-    add(await flow.topUp(k.publicKey(), 10)); await refresh(k.publicKey()); setPaso(2)
+  const recargar = (k = kp) => run('Recargando: QR en bolivianos y conversión a USDC…', async () => {
+    try {
+      setRecarga('qr')
+      await sleep(2600) // el pago por QR se simula
+      setRecarga('conv')
+      // La conversión se anima mientras la recarga real viaja a Stellar; se espera a las dos.
+      const [tx] = await Promise.all([flow.topUp(k.publicKey(), 10), sleep(2600)])
+      add(tx); await refresh(k.publicKey())
+      await sleep(700)
+      setPaso(2)
+    } finally { setRecarga(null) }
   })
   const autorizar = (k = kp, cap = Number(tope)) => run(`Firmando el tope de ${cap} USDC…`, async () => {
     add(await flow.approve(k, cap)); await refresh(k.publicKey()); setPaso(3)
@@ -149,11 +162,8 @@ export function App() {
             )}
             {paso === 1 && (
               <>
-                <div className="qr-sim">
-                  <QrCode size={44} />
-                  <div><strong>Bs 70,00</strong><span>QR bancario boliviano · simulado en la demo</span></div>
-                </div>
-                <Button onClick={() => recargar()} disabled={!!busy}><Check size={14} /> Pagué el QR</Button>
+                <p>Toca <b>Recargar</b> en el teléfono: se abre el QR bancario por Bs 70 (simulado) y los bolivianos se convierten en 10 USDC reales de prueba.</p>
+                <Button onClick={() => recargar()} disabled={!!busy}><QrCode size={14} /> Recargar Bs 70</Button>
               </>
             )}
             {paso === 2 && (
@@ -193,7 +203,7 @@ export function App() {
         <section className="phone-col">
           <Actividad activa={paso === 3} />
           <Phone width={300}>
-            <AppScreen paso={paso} saldo={saldo} permiso={permiso} mb={mb} cobrado={cobrado} cobros={cobros} retirado={retirado} wallet={kp?.publicKey()} />
+            <AppScreen paso={paso} saldo={saldo} permiso={permiso} mb={mb} cobrado={cobrado} cobros={cobros} retirado={retirado} wallet={kp?.publicKey()} recarga={recarga} onRecargar={paso === 1 && !busy ? () => { void recargar().catch(() => {}) } : undefined} />
           </Phone>
         </section>
 
@@ -248,7 +258,7 @@ export function App() {
   )
 }
 
-function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet }: { paso: number; saldo: number; permiso: number; mb: number; cobrado: number; cobros: Cobro[]; retirado: number | null; wallet?: string }) {
+function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet, recarga, onRecargar }: { paso: number; saldo: number; permiso: number; mb: number; cobrado: number; cobros: Cobro[]; retirado: number | null; wallet?: string; recarga: null | 'qr' | 'conv'; onRecargar?: () => void }) {
   return (
     <>
       <div className="app-head">
@@ -262,6 +272,9 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
         <strong className="app-big"><AnimatedCounter value={+saldo.toFixed(3)} decimals={3} suffix={`${NBSP}USDC`} locale="es-BO" /></strong>
         <span className="app-sub">{wallet ? `Billetera ${wallet.slice(0, 4)}…${wallet.slice(-4)}` : 'Sin billetera todavía'}</span>
       </div>
+      {paso === 1 && (
+        <button type="button" className="app-btn app-recargar" onClick={onRecargar} disabled={!onRecargar}><QrCode size={12} /> Recargar</button>
+      )}
       <div className="chip-wrap" aria-hidden="true">
         <div className="chip">
           <img src={chip} alt="" />
@@ -295,12 +308,59 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
         </>
       )}
       </div>
+      <Recarga fase={recarga} />
       <nav className="app-tabs" aria-hidden="true">
         <span><Home size={15} />Tienda</span>
         <span className="on"><Wallet size={15} />Saldo</span>
         <span><User size={15} />Perfil</span>
       </nav>
     </>
+  )
+}
+
+/** Hoja de recarga dentro del teléfono: primero el QR bancario, después la conversión de Bs a USDC. */
+function Recarga({ fase }: { fase: null | 'qr' | 'conv' }) {
+  // Los contadores arrancan en Bs 70 / 0 USDC y ruedan a 0 / 10 al entrar en la conversión.
+  const [convertido, setConvertido] = useState(false)
+  useEffect(() => {
+    if (fase !== 'conv') { setConvertido(false); return }
+    const t = window.setTimeout(() => setConvertido(true), 450)
+    return () => window.clearTimeout(t)
+  }, [fase])
+  return (
+    <div className="sheet" data-on={fase ? '' : undefined} aria-hidden={!fase}>
+      <span className="sheet-grip" />
+      {fase !== 'conv' ? (
+        <>
+          <b className="sheet-title">Escanea para pagar</b>
+          <span className="sheet-sub">Abre tu app bancaria boliviana y escanea este QR</span>
+          <div className="sheet-qr"><img src={qrPago} alt="" /></div>
+          <span className="app-cap">Monto a pagar</span>
+          <strong className="sheet-monto">Bs 70,00</strong>
+          <span className="sheet-wait"><TextShimmer>Esperando confirmación del pago…</TextShimmer></span>
+        </>
+      ) : (
+        <>
+          <span className="app-check sheet-ok"><Check size={20} /></span>
+          <b className="sheet-title">Pago recibido</b>
+          <span className="sheet-sub">Convirtiendo tus bolivianos a dólares digitales</span>
+          <div className="conv">
+            <div className="conv-side">
+              <span className="conv-flag"><BanderaBO /></span>
+              <strong><AnimatedCounter value={convertido ? 0 : 70} decimals={2} prefix={`Bs${NBSP}`} locale="es-BO" /></strong>
+              <small>Bolivianos</small>
+            </div>
+            <div className="conv-arrow" data-on={convertido || undefined}><span /><span /><span /></div>
+            <div className="conv-side">
+              <span className="conv-coin">$</span>
+              <strong><AnimatedCounter value={convertido ? 10 : 0} decimals={2} locale="es-BO" /></strong>
+              <small>USDC</small>
+            </div>
+          </div>
+          <span className="sheet-wait"><TextShimmer>Enviando a tu billetera en Stellar…</TextShimmer></span>
+        </>
+      )}
+    </div>
   )
 }
 
