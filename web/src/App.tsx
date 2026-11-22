@@ -459,30 +459,44 @@ function Ruta({ llego }: { llego: boolean }) {
   )
 }
 
+/** De cada video se muestran solo los primeros segundos, en bucle, para que el paso sea corto. */
+const CLIP_S = 2
+
 /** Segundo teléfono: la viajera usando sus apps. Los megas suben mientras corre el video. */
 function UsoEnVivo({ activa, idx, puedeAvanzar, onFin }: { activa: boolean; idx: number; puedeAvanzar: boolean; onFin: () => void }) {
   const ref = useRef<HTMLVideoElement>(null)
   const [progreso, setProgreso] = useState(0)
   const uso = USOS[idx % USOS.length]!
   const primeraVuelta = idx < USOS.length
+  const finRef = useRef(onFin)
+  finRef.current = onFin
   useEffect(() => {
     const v = ref.current
     if (!v) return
     setProgreso(0)
     if (activa) { v.currentTime = 0; void v.play().catch(() => {}) } else v.pause()
   }, [activa, idx])
-  const fin = () => {
-    // Si el cobro de este uso todavía viaja a Stellar, el video se repite hasta que se confirme.
-    if (puedeAvanzar) onFin()
-    else { const v = ref.current; if (v) { v.currentTime = 0; void v.play().catch(() => {}) } }
-  }
+  // Los megas suben con el tiempo (hasta el 92 %) y se completan cuando el cobro se confirma.
+  useEffect(() => {
+    if (!activa) return
+    const t0 = performance.now()
+    const t = window.setInterval(() => setProgreso(Math.min(0.92, (performance.now() - t0) / 5000)), 120)
+    return () => window.clearInterval(t)
+  }, [activa, idx])
+  // Se pasa al siguiente uso apenas se confirma el cobro (se deja ver "cobrados" un momento).
+  // Después de los tres usos, los clips rotan solos.
+  useEffect(() => {
+    if (!activa || !puedeAvanzar) return
+    const t = window.setTimeout(() => finRef.current(), idx < USOS.length ? 900 : CLIP_S * 1000)
+    return () => window.clearTimeout(t)
+  }, [activa, idx, puedeAvanzar])
   const mbVivo = primeraVuelta ? Math.max(1, Math.round(Math.max(progreso, puedeAvanzar ? 1 : 0) * uso.mb)) : null
   return (
     <div className="uso" data-on={activa || undefined} aria-hidden={!activa}>
       <div className="phone uso-phone">
         <div className="phone-screen">
           <video ref={ref} key={uso.src} src={uso.src} poster={uso.poster} muted playsInline preload="auto"
-            onTimeUpdate={e => { const v = e.currentTarget; if (v.duration) setProgreso(p => Math.max(p, v.currentTime / v.duration)) }} onEnded={fin} />
+            onTimeUpdate={e => { const v = e.currentTarget; if (v.currentTime >= CLIP_S) { v.currentTime = 0; void v.play().catch(() => {}) } }} loop />
           <div className="uso-datos">
             <Wifi size={12} />
             {mbVivo !== null ? <><b>{mbVivo} MB</b><span>{puedeAvanzar ? 'cobrados' : 'usando datos…'}</span></> : <span>Sigue navegando</span>}
