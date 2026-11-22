@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Car, Check, ExternalLink, Home, Landmark, Smartphone, User, MapPin, MessageCircle, Music, Plane, Play, QrCode, RotateCcw, ShieldCheck, Wallet, Wifi } from 'lucide-react'
+import { Camera, Car, Check, ExternalLink, Home, Landmark, User, MapPin, MessageCircle, Music, Plane, Play, QrCode, RotateCcw, ShieldCheck, Wallet, Wifi } from 'lucide-react'
 import { Badge } from './arc/vendor/badge/badge'
 import { Button } from './arc/vendor/button/button'
 import { Stepper } from './arc/vendor/stepper/stepper'
@@ -297,7 +297,6 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
       </div>
       <nav className="app-tabs" aria-hidden="true">
         <span><Home size={15} />Tienda</span>
-        <span><Smartphone size={15} />Mis eSIMs</span>
         <span className="on"><Wallet size={15} />Saldo</span>
         <span><User size={15} />Perfil</span>
       </nav>
