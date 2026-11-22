@@ -25,28 +25,40 @@ export function createFlow(sdk: Sdk) {
   const merchant = Keypair.fromSecret(DEMO.merchantSecret)
   const topup = Keypair.fromSecret(DEMO.topupSecret)
 
-  async function send(tx: any, what: string): Promise<Tx> {
-    const sent = await server.sendTransaction(tx)
-    if (sent.status !== 'PENDING') throw new Error(`${what}: la red rechazó la transacción (${sent.status})`)
-    const done = await server.pollTransaction(sent.hash, { attempts: 30, sleepStrategy: () => 1000 })
-    if (done.status !== 'SUCCESS') throw new Error(`${what}: terminó en ${done.status}`)
-    return { hash: sent.hash, what }
+  const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+
+  /**
+   * Arma, firma y envía; si la red pide reintentar, vuelve a armar con la secuencia nueva.
+   * Las cuentas del comercio y de recargas son compartidas por todos los visitantes de la demo, y
+   * Stellar acepta una transacción por cuenta a la vez: dos visitas simultáneas chocan
+   * (TRY_AGAIN_LATER o secuencia vieja) y hay que reintentar.
+   */
+  async function submit(signer: any, op: any, what: string, prepare: boolean): Promise<Tx> {
+    let last = ''
+    for (let attempt = 0; attempt < 8; attempt++) {
+      if (attempt > 0) await sleep(1500 + Math.random() * 2500)
+      try {
+        const acc = await server.getAccount(signer.publicKey())
+        let tx = new TransactionBuilder(acc, { fee: BASE_FEE, networkPassphrase: passphrase }).addOperation(op).setTimeout(60).build()
+        if (prepare) tx = await server.prepareTransaction(tx)
+        tx.sign(signer)
+        const sent = await server.sendTransaction(tx)
+        if (sent.status === 'TRY_AGAIN_LATER' || sent.status === 'ERROR') { last = sent.status; continue }
+        if (sent.status !== 'PENDING' && sent.status !== 'DUPLICATE') { last = sent.status; continue }
+        const done = await server.pollTransaction(sent.hash, { attempts: 12, sleepStrategy: () => 1000 })
+        if (done.status === 'SUCCESS') return { hash: sent.hash, what }
+        last = done.status
+      } catch (e: any) {
+        last = e?.message ?? String(e)
+        // Un error del contrato (sin saldo, tope superado) no se arregla reintentando.
+        if (/Error\(Contract|HostError/.test(last)) break
+      }
+    }
+    throw new Error(`${what}: la red no aceptó la transacción (${last.slice(0, 120)})`)
   }
 
-  async function classic(signer: any, op: any, what: string) {
-    const acc = await server.getAccount(signer.publicKey())
-    const tx = new TransactionBuilder(acc, { fee: BASE_FEE, networkPassphrase: passphrase }).addOperation(op).setTimeout(60).build()
-    tx.sign(signer)
-    return send(tx, what)
-  }
-
-  async function soroban(signer: any, op: any, what: string) {
-    const acc = await server.getAccount(signer.publicKey())
-    const tx = new TransactionBuilder(acc, { fee: BASE_FEE, networkPassphrase: passphrase }).addOperation(op).setTimeout(60).build()
-    const ready = await server.prepareTransaction(tx)
-    ready.sign(signer)
-    return send(ready, what)
-  }
+  const classic = (signer: any, op: any, what: string) => submit(signer, op, what, false)
+  const soroban = (signer: any, op: any, what: string) => submit(signer, op, what, true)
 
   /** Lectura sin costo: simula la llamada y devuelve el valor. */
   async function read(contractId: string, method: string, args: any[]) {
