@@ -106,6 +106,15 @@ Es un dato propio de Fonnazo, no un estudio de mercado: sobre las eSIMs que vend
 - **Custodia:** en la demo y en el piloto la llave vive en el dispositivo del usuario (cuenta clásica de Stellar). El contrato nunca custodia fondos: solo puede mover hasta el tope que el usuario firmó, y el usuario puede revocarlo. Para usuarios que no quieren manejar llaves evaluamos un custodio registrado; en ese caso el tope de gasto sigue siendo el control del usuario sobre cuánto se le puede cobrar.
 - **Mainnet:** redesplegar el contrato con precios reales por país, usar el USDC de Circle, y abrir un piloto cerrado con clientes actuales.
 
+## Equipo e historial del repositorio
+
+El desarrollo se hizo en el repositorio privado de Fonnazo, que contiene el backend y la app en producción. Por seguridad ese repositorio no puede ser público, así que este es una copia limpia publicada para la hackathon, con el contrato y la demo. Por eso el historial empieza el último día y todos los commits salen de una sola cuenta.
+
+Lo que sí se puede verificar desde afuera es la fecha del trabajo: el contrato del piloto se desplegó en testnet el 16 de noviembre de 2026 (UTC) y sus cobros con la eSIM real son del 16 y 17 de noviembre, seis días antes de publicar este repositorio.
+
+- **Sebastian Morales:** producto, frontend y pitch. Publicó este repositorio.
+- **Camila:** backend e IA, en el repositorio privado: el servicio que lee el consumo de la eSIM y llama a `charge`.
+
 ## Licencia
 
 MIT. Ver [LICENSE](LICENSE).
