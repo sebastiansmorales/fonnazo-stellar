@@ -9,6 +9,7 @@ import { AnimatedCounter } from './arc/vendor/animated-counter/animated-counter'
 import SegmentedControl from './arc/vendor/segmented-control/segmented-control'
 import { Phone } from './parts/Phone'
 import logo from './logo.png'
+import chip from './chip.png'
 import { DEMO } from './demo-config'
 import { contractUrl, accountUrl, createFlow, txUrl, type Tx } from './flow'
 import lastRun from './last-run.json'
@@ -223,6 +224,7 @@ export function App() {
             <li>Un reporte repetido <b>no cobra dos veces</b>: el contrato cobra sobre el consumo acumulado.</li>
           </ul>
         </div>
+        <div className="chip-wrap" aria-hidden="true"><img src={chip} alt="" className="chip" /></div>
         <div className="panel">
           <h2>Verificable</h2>
           <div className="ids">

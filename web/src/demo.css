@@ -99,3 +99,50 @@ details.evidence { margin: 0 0 12px; font-size: 13px; color: var(--text-secondar
 details.evidence summary { cursor: pointer; color: #fff; padding: 4px 0; }
 details.evidence ol { margin: 8px 0 0; padding-left: 20px; display: grid; grid-template-columns: 1fr; gap: 4px; }
 @media (max-width: 860px) { .story, .notes { grid-template-columns: 1fr; gap: 12px; } }
+
+/* Chip eSIM de la app móvil: mismo giro sobre el eje vertical (360° en 6,5 s, perspectiva 900,
+   ángulo = 360·p − 48·sin(2πp), que lo frena cuando queda de frente). */
+.notes { grid-template-columns: 1fr auto 1fr; align-items: stretch; }
+.chip-wrap { display: grid; place-items: center; perspective: 900px; padding: 0 12px; }
+.chip { width: 150px; height: auto; animation: chip-spin 6.5s linear infinite; filter: drop-shadow(0 18px 40px rgb(124 58 237 / 45%)); }
+@keyframes chip-spin {
+  0.00% { transform: rotateY(0.0deg); }
+  2.78% { transform: rotateY(1.7deg); }
+  5.56% { transform: rotateY(3.6deg); }
+  8.33% { transform: rotateY(6.0deg); }
+  11.11% { transform: rotateY(9.1deg); }
+  13.89% { transform: rotateY(13.2deg); }
+  16.67% { transform: rotateY(18.4deg); }
+  19.44% { transform: rotateY(24.9deg); }
+  22.22% { transform: rotateY(32.7deg); }
+  25.00% { transform: rotateY(42.0deg); }
+  27.78% { transform: rotateY(52.7deg); }
+  30.56% { transform: rotateY(64.9deg); }
+  33.33% { transform: rotateY(78.4deg); }
+  36.11% { transform: rotateY(93.2deg); }
+  38.89% { transform: rotateY(109.1deg); }
+  41.67% { transform: rotateY(126.0deg); }
+  44.44% { transform: rotateY(143.6deg); }
+  47.22% { transform: rotateY(161.7deg); }
+  50.00% { transform: rotateY(180.0deg); }
+  52.78% { transform: rotateY(198.3deg); }
+  55.56% { transform: rotateY(216.4deg); }
+  58.33% { transform: rotateY(234.0deg); }
+  61.11% { transform: rotateY(250.9deg); }
+  63.89% { transform: rotateY(266.8deg); }
+  66.67% { transform: rotateY(281.6deg); }
+  69.44% { transform: rotateY(295.1deg); }
+  72.22% { transform: rotateY(307.3deg); }
+  75.00% { transform: rotateY(318.0deg); }
+  77.78% { transform: rotateY(327.3deg); }
+  80.56% { transform: rotateY(335.1deg); }
+  83.33% { transform: rotateY(341.6deg); }
+  86.11% { transform: rotateY(346.8deg); }
+  88.89% { transform: rotateY(350.9deg); }
+  91.67% { transform: rotateY(354.0deg); }
+  94.44% { transform: rotateY(356.4deg); }
+  97.22% { transform: rotateY(358.3deg); }
+  100.00% { transform: rotateY(360.0deg); }
+}
+@media (prefers-reduced-motion: reduce) { .chip { animation: none; } }
+@media (max-width: 860px) { .notes { grid-template-columns: 1fr; } .chip-wrap { padding: 8px 0; } }
