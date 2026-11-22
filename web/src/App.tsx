@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Camera, Car, Check, ExternalLink, Landmark, MapPin, MessageCircle, Music, Plane, Play, QrCode, RotateCcw, ShieldCheck, Wallet, Wifi } from 'lucide-react'
+import { Camera, Car, Check, ExternalLink, Home, Landmark, Smartphone, User, MapPin, MessageCircle, Music, Plane, Play, QrCode, RotateCcw, ShieldCheck, Wallet, Wifi } from 'lucide-react'
 import { Badge } from './arc/vendor/badge/badge'
 import { Button } from './arc/vendor/button/button'
 import { Stepper } from './arc/vendor/stepper/stepper'
@@ -192,7 +192,7 @@ export function App() {
 
         <section className="phone-col">
           <Actividad activa={paso === 3} />
-          <Phone width={280}>
+          <Phone width={300}>
             <AppScreen paso={paso} saldo={saldo} permiso={permiso} mb={mb} cobrado={cobrado} cobros={cobros} retirado={retirado} wallet={kp?.publicKey()} />
           </Phone>
         </section>
@@ -251,8 +251,11 @@ export function App() {
 function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet }: { paso: number; saldo: number; permiso: number; mb: number; cobrado: number; cobros: Cobro[]; retirado: number | null; wallet?: string }) {
   return (
     <>
-      <div className="app-status"><span>9:41</span><span className="app-island" /><span className="app-status-icons">●●●</span></div>
-      <div className="app-top"><span>{paso >= 3 ? 'Mi eSIM' : 'Saldo'}</span></div>
+      <div className="app-head">
+        <div className="app-status"><span>9:41</span><span className="app-island" /><span className="app-status-icons">●●●</span></div>
+        <div className="app-top"><span>Saldo</span></div>
+      </div>
+      <div className="app-scroll">
       <Ruta llego={paso >= 3} />
       <div className="app-card grad-card">
         <span className="app-cap">Tu saldo</span>
@@ -282,7 +285,7 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
         <>
           <p className="app-label">Cobros en Stellar</p>
           {cobros.length === 0 && <p className="app-note">Todavía no hay cobros.</p>}
-          {cobros.slice(0, 3).map(c => (
+          {cobros.map(c => (
             <div className="app-row" key={c.hash}>
               <span className="app-ico"><Wifi size={11} /></span>
               <span className="app-row-t"><b>{c.mb} MB</b><small>{c.hash.slice(0, 6)}…</small></span>
@@ -291,6 +294,13 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
           ))}
         </>
       )}
+      </div>
+      <nav className="app-tabs" aria-hidden="true">
+        <span><Home size={15} />Tienda</span>
+        <span><Smartphone size={15} />Mis eSIMs</span>
+        <span className="on"><Wallet size={15} />Saldo</span>
+        <span><User size={15} />Perfil</span>
+      </nav>
     </>
   )
 }

@@ -103,7 +103,7 @@ details.evidence ol { margin: 8px 0 0; padding-left: 20px; display: grid; grid-t
 /* Chip eSIM de la app móvil: mismo giro sobre el eje vertical (360° en 6,5 s, perspectiva 900,
    ángulo = 360·p − 48·sin(2πp), que lo frena cuando queda de frente). */
 .chip-wrap { display: grid; place-items: center; perspective: 900px; padding: 2px 0; }
-.chip { position: relative; width: 92px; animation: chip-spin 6.5s linear infinite; filter: drop-shadow(0 16px 30px rgb(124 58 237 / 50%)); }
+.chip { position: relative; width: 128px; animation: chip-spin 6.5s linear infinite; filter: drop-shadow(0 16px 30px rgb(124 58 237 / 50%)); }
 .chip > img { display: block; width: 100%; height: auto; }
 /* Bandera sobre el chip, en la misma posición e inclinación que en la bienvenida de la app. */
 .chip-flag { position: absolute; top: 13.5%; left: 47%; width: 17%; aspect-ratio: 1 / .66; border-radius: 2px; overflow: hidden; border: 1px solid rgb(255 150 12 / 60%); transform: rotate(-16deg); }
@@ -173,3 +173,12 @@ details.evidence ol { margin: 8px 0 0; padding-left: 20px; display: grid; grid-t
 .burbuja b { font-size: 12.5px; font-weight: 500; color: #fff; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; }
 .burbuja small { font-size: 11px; color: #b9a6dd; line-height: 1.2; }
 @keyframes burbuja { 0% { opacity: 0; transform: translateY(10px) scale(.96); filter: blur(6px); } 18% { opacity: 1; transform: none; filter: none; } 80% { opacity: 1; transform: none; filter: none; } 100% { opacity: 0; transform: translateY(-8px); filter: blur(6px); } }
+
+/* Pantalla del teléfono en tres zonas: encabezado fijo, contenido con scroll y pestañas abajo, como en la app. */
+.demo .phone .app { padding: 0; gap: 0; }
+.app-head { padding: 10px 12px 8px; display: flex; flex-direction: column; gap: 6px; flex: none; }
+.app-scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px 12px 12px; display: flex; flex-direction: column; gap: 10px; scrollbar-width: none; }
+.app-scroll::-webkit-scrollbar { display: none; }
+.app-tabs { flex: none; display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 6px 14px; border-top: 1px solid rgb(255 255 255 / 9%); background: rgb(10 6 19 / 92%); backdrop-filter: blur(10px); }
+.app-tabs span { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 8.5px; color: #8f7fb0; }
+.app-tabs .on { color: #c77dff; font-weight: 600; }
