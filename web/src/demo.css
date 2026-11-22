@@ -20,7 +20,7 @@ body { background: #0d0616; }
 .top-right { display: flex; align-items: center; gap: 14px; }
 
 .hero { padding: 28px 0 26px; }
-.title-xl { font-family: var(--font-display); font-weight: 500; font-size: clamp(30px, 4.4vw, 48px); line-height: 1.06; letter-spacing: -0.03em; margin: 6px 0 14px; text-wrap: balance; }
+.title-xl { font-family: var(--font-display); font-weight: 500; font-size: clamp(26px, 3.2vw, 36px); line-height: 1.06; letter-spacing: -0.03em; margin: 6px 0 14px; text-wrap: balance; }
 .hero .lede { max-width: 760px; font-size: 16px; }
 .hero-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
 
