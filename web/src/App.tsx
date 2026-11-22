@@ -27,6 +27,10 @@ const flow = createFlow(sdk)
 const NBSP = ' '
 const PRICE_MB = DEMO.pricePerGb / 1000
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
+// Tipo de cambio de la demo: Bs 70 = 10 USDC.
+const BS_POR_USDC = 7
+// Cuenta bancaria de ejemplo de la viajera (datos ficticios).
+const BANCO = { banco: 'Banco del Oriente', tipo: 'Caja de ahorro', cuenta: '•••• 4821', titular: 'Paola Rojas' }
 const fmt = (n: number, d = 2) => n.toLocaleString('es-BO', { minimumFractionDigits: d, maximumFractionDigits: d })
 
 const PASOS = [
@@ -60,6 +64,10 @@ export function App() {
   const [retirado, setRetirado] = useState<number | null>(null)
   // Recarga dentro del teléfono: 'qr' (se muestra el QR) → 'conv' (Bs se convierten a USDC) → null.
   const [recarga, setRecarga] = useState<null | 'qr' | 'conv'>(null)
+  // Fin del viaje: 'pregunta' (¿retirar a Bs?) → 'conv' (USDC se convierten a Bs) → null.
+  const [retiro, setRetiro] = useState<null | 'pregunta' | 'conv'>(null)
+  const [guardado, setGuardado] = useState(false)
+  const eleccion = useRef<((si: boolean) => void) | null>(null)
   // Paso Navega: qué video se ve (usoIdx) y cuántos usos ya se cobraron (cobrados).
   const [usoIdx, setUsoIdx] = useState(0)
   const [cobrados, setCobrados] = useState(0)
@@ -122,10 +130,28 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paso, kp, usoIdx])
 
-  const retirar = (k = kp) => run('Retirando el sobrante a Bs…', async () => {
-    const b = await flow.balance(k.publicKey())
-    add(await flow.withdraw(k, b)); setRetirado(b); await refresh(k.publicKey()); setPaso(4)
-  })
+  // Fin del viaje: el teléfono pregunta si retira a bolivianos. Si dice que sí, se anima la conversión
+  // mientras el retiro real viaja a Stellar; si dice que no, el saldo queda para el próximo viaje.
+  const terminar = async (k = kp, autoSi = false) => {
+    setRetiro('pregunta')
+    const si = await new Promise<boolean>(resolve => {
+      eleccion.current = resolve
+      if (autoSi) window.setTimeout(() => resolve(true), 2200)
+    })
+    eleccion.current = null
+    if (!si) { setRetiro(null); setGuardado(true); setPaso(4); return }
+    await run('Retirando tu saldo a bolivianos…', async () => {
+      try {
+        const b = await flow.balance(k.publicKey())
+        setRetirado(b)
+        setRetiro('conv')
+        const [tx] = await Promise.all([flow.withdraw(k, b), sleep(3000)])
+        add(tx); await refresh(k.publicKey())
+        await sleep(700)
+        setPaso(4)
+      } finally { setRetiro(null) }
+    })
+  }
 
   const todo = async () => {
     auto.current = true
@@ -135,12 +161,12 @@ export function App() {
       await autorizar(k, Number(tope))
       // Los cobros los disparan los videos; se espera a que los tres usos estén cobrados.
       for (let i = 0; i < 240 && cobradosRef.current < USOS.length; i++) { if (!auto.current) return; await sleep(500) }
-      await retirar(k)
+      await terminar(k, true)
     } catch { /* el error ya se muestra */ } finally { auto.current = false }
   }
 
   const reiniciar = () => {
-    setPaso(0); setTxs([]); setKp(null); setSaldo(0); setPermiso(0); setMb(0); setCobros([]); setRetirado(null); setError(null); setUsoIdx(0); setCobrados(0); mbRef.current = 0; cobradosRef.current = 0
+    setPaso(0); setTxs([]); setKp(null); setSaldo(0); setPermiso(0); setMb(0); setCobros([]); setRetirado(null); setRetiro(null); setGuardado(false); eleccion.current?.(false); setError(null); setUsoIdx(0); setCobrados(0); mbRef.current = 0; cobradosRef.current = 0
   }
 
   const cobrado = useMemo(() => cobros.reduce((s, c) => s + c.usdc, 0), [cobros])
@@ -214,13 +240,15 @@ export function App() {
                 </div>
                 <div className="row-actions">
                   <Button variant="secondary" size="sm" onClick={() => { void consumir(0).catch(() => {}) }} disabled={!!busy || mb === 0}>Repetir el último reporte (no cobra)</Button>
-                  <Button size="sm" onClick={() => retirar()} disabled={!!busy}><Landmark size={14} /> Terminar el viaje</Button>
+                  <Button size="sm" onClick={() => { void terminar().catch(() => {}) }} disabled={!!busy || !!retiro}><Landmark size={14} /> Terminar el viaje</Button>
                 </div>
               </>
             )}
             {paso === 4 && (
               <>
-                <p>Viaje terminado. El viajero usó {mb} MB, pagó {fmt(cobrado, 3)} USDC y retiró {fmt(retirado ?? 0)} USDC a su banco en Bs.</p>
+                {guardado
+                  ? <p>Viaje terminado. Paola usó {mb} MB, pagó {fmt(cobrado, 3)} USDC y guardó {fmt(saldo)} USDC para su próximo viaje.</p>
+                  : <p>Viaje terminado. Paola usó {mb} MB, pagó {fmt(cobrado, 3)} USDC y retiró {fmt(retirado ?? 0)} USDC a su banco: Bs {fmt((retirado ?? 0) * BS_POR_USDC)}.</p>}
                 <Button variant="secondary" onClick={reiniciar}><RotateCcw size={14} /> Probar de nuevo</Button>
               </>
             )}
@@ -231,7 +259,7 @@ export function App() {
 
         <section className="phone-col">
           <Phone width={300}>
-            <AppScreen paso={paso} saldo={saldo} permiso={permiso} mb={mb} cobrado={cobrado} cobros={cobros} retirado={retirado} wallet={kp?.publicKey()} recarga={recarga} onRecargar={paso === 1 && !busy ? () => { void recargar().catch(() => {}) } : undefined} />
+            <AppScreen paso={paso} saldo={saldo} permiso={permiso} mb={mb} cobrado={cobrado} cobros={cobros} retirado={retirado} wallet={kp?.publicKey()} retiro={retiro} guardado={guardado} onElegir={si => eleccion.current?.(si)} recarga={recarga} onRecargar={paso === 1 && !busy ? () => { void recargar().catch(() => {}) } : undefined} />
           </Phone>
           <UsoEnVivo activa={paso === 3} idx={usoIdx} puedeAvanzar={cobrados > usoIdx || usoIdx >= USOS.length} onFin={() => setUsoIdx(i => i + 1)} />
         </section>
@@ -287,7 +315,7 @@ export function App() {
   )
 }
 
-function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet, recarga, onRecargar }: { paso: number; saldo: number; permiso: number; mb: number; cobrado: number; cobros: Cobro[]; retirado: number | null; wallet?: string; recarga: null | 'qr' | 'conv'; onRecargar?: () => void }) {
+function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet, recarga, onRecargar, retiro, guardado, onElegir }: { paso: number; saldo: number; permiso: number; mb: number; cobrado: number; cobros: Cobro[]; retirado: number | null; wallet?: string; recarga: null | 'qr' | 'conv'; onRecargar?: () => void; retiro: null | 'pregunta' | 'conv'; guardado: boolean; onElegir: (si: boolean) => void }) {
   return (
     <>
       <div className="app-head">
@@ -323,11 +351,19 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
         </div>
         <span className="app-sub">Tope disponible: {fmt(permiso, 3)} USDC</span>
       </div>
-      {paso === 4 && retirado !== null ? (
+      {paso === 4 && guardado ? (
+        <div className="app-center">
+          <span className="app-check"><Check size={20} /></span>
+          <span className="app-cap">Guardaste para tu próximo viaje</span>
+          <strong className="app-big">{fmt(saldo)} <small>USDC</small></strong>
+          <span className="app-sub">No vencen</span>
+        </div>
+      ) : paso === 4 && retirado !== null ? (
         <div className="app-center">
           <span className="app-check"><Check size={20} /></span>
           <span className="app-cap">Retiraste a tu banco</span>
-          <strong className="app-big">{fmt(retirado)} <small>USDC</small></strong>
+          <strong className="app-big">Bs {fmt(retirado * BS_POR_USDC)}</strong>
+          <span className="app-sub">{fmt(retirado)} USDC · {BANCO.banco} {BANCO.cuenta}</span>
         </div>
       ) : (
         <>
@@ -344,12 +380,64 @@ function AppScreen({ paso, saldo, permiso, mb, cobrado, cobros, retirado, wallet
       )}
       </div>
       <Recarga fase={recarga} />
+      <Retiro fase={retiro} usdc={retiro === 'conv' ? retirado ?? saldo : saldo} onElegir={onElegir} />
       <nav className="app-tabs" aria-hidden="true">
         <span><Home size={15} />Tienda</span>
         <span className="on"><Wallet size={15} />Saldo</span>
         <span><User size={15} />Perfil</span>
       </nav>
     </>
+  )
+}
+
+/** Hoja de fin de viaje: pregunta si retira a bolivianos y, si acepta, anima la conversión de USDC a Bs. */
+function Retiro({ fase, usdc, onElegir }: { fase: null | 'pregunta' | 'conv'; usdc: number; onElegir: (si: boolean) => void }) {
+  const [convertido, setConvertido] = useState(false)
+  useEffect(() => {
+    if (fase !== 'conv') { setConvertido(false); return }
+    const t = window.setTimeout(() => setConvertido(true), 450)
+    return () => window.clearTimeout(t)
+  }, [fase])
+  const bs = usdc * BS_POR_USDC
+  const cuenta = (
+    <div className="banco">
+      <span className="banco-ico"><Landmark size={14} /></span>
+      <span><b>{BANCO.banco}</b><small>{BANCO.tipo} {BANCO.cuenta}</small><small>{BANCO.titular}</small></span>
+    </div>
+  )
+  return (
+    <div className="sheet" data-on={fase ? '' : undefined} aria-hidden={!fase}>
+      <span className="sheet-grip" />
+      {fase !== 'conv' ? (
+        <>
+          <b className="sheet-title">¿Retirar tu saldo a bolivianos?</b>
+          <span className="sheet-sub">Te quedan {fmt(usdc)} USDC, que son Bs {fmt(bs)}</span>
+          {cuenta}
+          <button type="button" className="app-btn sheet-btn" onClick={() => onElegir(true)} disabled={fase !== 'pregunta'}><Landmark size={12} /> Sí, retirar a mi banco</button>
+          <button type="button" className="app-btn ghost sheet-btn" onClick={() => onElegir(false)} disabled={fase !== 'pregunta'}>No, guardarlo para mi próximo viaje</button>
+        </>
+      ) : (
+        <>
+          <b className="sheet-title">Retirando a tu banco</b>
+          <span className="sheet-sub">Convirtiendo tus dólares digitales a bolivianos</span>
+          <div className="conv">
+            <div className="conv-side">
+              <span className="conv-coin">$</span>
+              <strong><AnimatedCounter value={convertido ? 0 : +usdc.toFixed(2)} decimals={2} locale="es-BO" /></strong>
+              <small>USDC</small>
+            </div>
+            <div className="conv-arrow" data-on={convertido || undefined}><span /><span /><span /></div>
+            <div className="conv-side">
+              <span className="conv-flag"><BanderaBO /></span>
+              <strong><AnimatedCounter value={convertido ? +bs.toFixed(2) : 0} decimals={2} prefix={`Bs${NBSP}`} locale="es-BO" /></strong>
+              <small>Bolivianos</small>
+            </div>
+          </div>
+          {cuenta}
+          <span className="sheet-wait"><TextShimmer>Enviando a tu cuenta…</TextShimmer></span>
+        </>
+      )}
+    </div>
   )
 }
 
