@@ -333,7 +333,7 @@ function Ruta({ llego }: { llego: boolean }) {
         <span className="ruta-flag"><BanderaBR /></span>
       </div>
       <span className="ruta-text">
-        {llego ? <><span className="app-dot ok" /> Carla, de Santa Cruz, ya está en São Paulo</> : 'Carla viaja de Santa Cruz a São Paulo'}
+        {llego ? <><span className="app-dot ok" /> Paola, de Santa Cruz, ya está en São Paulo</> : 'Paola viaja de Santa Cruz a São Paulo'}
       </span>
     </div>
   )
