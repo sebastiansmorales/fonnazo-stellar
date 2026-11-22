@@ -21,7 +21,7 @@ const PRICE_MB = DEMO.pricePerGb / 1000
 const fmt = (n: number, d = 2) => n.toLocaleString('es-BO', { minimumFractionDigits: d, maximumFractionDigits: d })
 
 const PASOS = [
-  { id: 'billetera', label: 'Billetera', description: 'Se crea una billetera nueva en Stellar testnet para este viajero.' },
+  { id: 'billetera', label: 'Billetera', description: 'Se crea una billetera nueva en Stellar testnet, lista para recibir USDC.' },
   { id: 'recarga', label: 'Recarga en Bs', description: 'Paga Bs 70 por QR (simulado) y recibe 10 USDC reales de prueba.' },
   { id: 'tope', label: 'Tope de gasto', description: 'Autoriza al contrato medidor a cobrarle como máximo este monto.' },
   { id: 'navega', label: 'Navega', description: 'Cada reporte de consumo dispara un cobro del contrato, solo por lo nuevo.' },
@@ -127,6 +127,31 @@ export function App() {
           <Button variant="ghost" onClick={reiniciar} disabled={!!busy}><RotateCcw size={14} /> Empezar de nuevo</Button>
         </div>
       </section>
+
+      <section className="story">
+        <div className="panel story-stat">
+          <strong>45{NBSP}%</strong>
+          <p>de los datos que compran quienes usan eSIMs internacionales vence sin consumirse.</p>
+        </div>
+        <div className="panel">
+          <h2>El problema</h2>
+          <ul className="bullets">
+            <li><b>Paquetes cerrados.</b> El viajero compra 3 GB por las dudas, usa uno y el resto vence con el plan.</li>
+            <li><b>Pagar en dólares es difícil.</b> Desde Bolivia las tarjetas tienen topes y recargos para pagar afuera.</li>
+            <li><b>El sobrante no vuelve.</b> Lo que no se usó no se guarda, no se transfiere y no se devuelve.</li>
+          </ul>
+        </div>
+        <div className="panel">
+          <h2>La solución</h2>
+          <ul className="bullets">
+            <li><b>Pagas solo lo que usas.</b> El cobro es por MB consumido, no por paquete.</li>
+            <li><b>Recargas en bolivianos.</b> Con QR desde el banco, sin tarjeta internacional.</li>
+            <li><b>Lo que sobra sigue siendo tuyo.</b> El saldo está en dólares digitales, no vence y se puede retirar.</li>
+          </ul>
+        </div>
+      </section>
+
+      <h2 className="section-title" id="demo">Pruébalo: cada paso es una transacción real</h2>
 
       <main className="grid">
         <section className="panel steps-panel">
@@ -243,6 +268,65 @@ export function App() {
             <span>Medidor</span><code>{DEMO.meterContractId.slice(0, 10)}…</code><CopyButton value={DEMO.meterContractId} label="Copiar" iconOnly />
             <span>USDC de prueba</span><code>{DEMO.tokenContractId.slice(0, 10)}…</code><CopyButton value={DEMO.tokenContractId} label="Copiar" iconOnly />
           </div>
+        </div>
+      </section>
+
+      <section className="deck-sections">
+        <div className="panel wide">
+          <h2>Qué es Fonnazo</h2>
+          <p className="body">
+            Fonnazo es una app para comprar eSIMs de datos para viajar. El viajero boliviano elige su destino, paga en
+            bolivianos con QR desde su banco y se conecta al llegar, sin chip físico y sin roaming. Es una empresa en
+            marcha, con clientes que compran todas las semanas: ya emitimos eSIMs para 29 países, con Brasil, Chile,
+            Argentina, Perú y China como destinos principales, y una comunidad de 16 mil seguidores en TikTok. El pago
+            por MB se monta sobre esta base: los mismos clientes, la misma app.
+          </p>
+        </div>
+
+        <div className="panel wide">
+          <h2>Frente a las alternativas</h2>
+          <p className="muted">Otros cobran por consumo con crédito de tienda. El saldo de Fonnazo es del usuario.</p>
+          <div className="cmp" role="table">
+            <div className="cmp-row cmp-head" role="row"><span role="columnheader" /><span role="columnheader">Paquete por GB</span><span role="columnheader">Saldo de tienda</span><span role="columnheader" className="hl">Fonnazo</span></div>
+            {[
+              ['Pagas solo lo que consumes', 'No', 'Sí', 'Sí'],
+              ['El saldo es tuyo: se retira o se transfiere', 'No', 'No', 'Sí'],
+              ['Recargas en bolivianos, sin tarjeta internacional', 'No', 'No', 'Sí'],
+              ['Cada cobro se puede verificar en la red', 'No', 'No', 'Sí'],
+            ].map(r => (
+              <div className="cmp-row" role="row" key={r[0]}>
+                <span role="cell">{r[0]}</span>
+                {r.slice(1).map((v, i) => <span role="cell" key={i} className={v === 'Sí' ? 'yes' : 'no'}>{v}</span>)}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>Por qué Stellar</h2>
+          <ul className="bullets">
+            <li><b>Comisiones mínimas.</b> Una transferencia cuesta alrededor de 0,001 XLM, así que cobrar cada bloque de megas es viable.</li>
+            <li><b>USDC nativo.</b> Dólares digitales emitidos en la red, sin puentes de por medio.</li>
+            <li><b>Contratos Soroban.</b> El medidor fija el precio por país, el tope lo pone el usuario y cada cobro queda registrado.</li>
+          </ul>
+        </div>
+        <div className="panel">
+          <h2>Modelo de negocio</h2>
+          <ul className="bullets">
+            <li><b>Margen por MB.</b> Precio por país sobre el costo mayorista del mega. El margen no depende de que el cliente desperdicie datos.</li>
+            <li><b>Clientes que vuelven.</b> Si el saldo no se pierde, el viajero recarga sin miedo y vuelve en el próximo viaje.</li>
+            <li><b>Sin costo de adquisición nuevo.</b> Se activa como un modo más de la app para los clientes actuales.</li>
+          </ul>
+        </div>
+        <div className="panel wide">
+          <h2>Lo que sigue</h2>
+          <ol className="bullets">
+            <li><b>Billetera Fonnazo.</b> El saldo vive en una billetera de Fonnazo con un custodio registrado; el usuario no maneja llaves.</li>
+            <li><b>Recarga y retiro en bolivianos</b> con un proveedor de pagos regulado.</li>
+            <li><b>Piloto con clientes actuales,</b> todavía en testnet.</li>
+            <li><b>Más allá de los datos:</b> el mismo saldo para otros gastos del viaje.</li>
+          </ol>
+          <p className="muted repo">Código y contrato: <a className="link" href="https://github.com/sebastiansmorales/fonnazo-stellar" target="_blank" rel="noreferrer">github.com/sebastiansmorales/fonnazo-stellar</a></p>
         </div>
       </section>
 

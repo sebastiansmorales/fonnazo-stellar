@@ -33,15 +33,18 @@ export function createFlow(sdk: Sdk) {
    * Stellar acepta una transacción por cuenta a la vez: dos visitas simultáneas chocan
    * (TRY_AGAIN_LATER o secuencia vieja) y hay que reintentar.
    */
-  async function submit(signer: any, op: any, what: string, prepare: boolean): Promise<Tx> {
+  async function submit(signers: any[], ops: any[], what: string, prepare: boolean): Promise<Tx> {
     let last = ''
     for (let attempt = 0; attempt < 8; attempt++) {
       if (attempt > 0) await sleep(1500 + Math.random() * 2500)
       try {
-        const acc = await server.getAccount(signer.publicKey())
-        let tx = new TransactionBuilder(acc, { fee: BASE_FEE, networkPassphrase: passphrase }).addOperation(op).setTimeout(60).build()
+        // La cuenta origen es la del primer firmante; los demás firman operaciones con origen propio.
+        const acc = await server.getAccount(signers[0].publicKey())
+        const builder = new TransactionBuilder(acc, { fee: String(Number(BASE_FEE) * ops.length), networkPassphrase: passphrase })
+        for (const op of ops) builder.addOperation(op)
+        let tx = builder.setTimeout(60).build()
         if (prepare) tx = await server.prepareTransaction(tx)
-        tx.sign(signer)
+        tx.sign(...signers)
         const sent = await server.sendTransaction(tx)
         if (sent.status === 'TRY_AGAIN_LATER' || sent.status === 'ERROR') { last = sent.status; continue }
         if (sent.status !== 'PENDING' && sent.status !== 'DUPLICATE') { last = sent.status; continue }
@@ -57,8 +60,8 @@ export function createFlow(sdk: Sdk) {
     throw new Error(`${what}: la red no aceptó la transacción (${last.slice(0, 120)})`)
   }
 
-  const classic = (signer: any, op: any, what: string) => submit(signer, op, what, false)
-  const soroban = (signer: any, op: any, what: string) => submit(signer, op, what, true)
+  const classic = (signer: any, op: any, what: string) => submit([signer], [op], what, false)
+  const soroban = (signer: any, op: any, what: string) => submit([signer], [op], what, true)
 
   /** Lectura sin costo: simula la llamada y devuelve el valor. */
   async function read(contractId: string, method: string, args: any[]) {
@@ -75,18 +78,25 @@ export function createFlow(sdk: Sdk) {
   return {
     merchantId: merchant.publicKey(),
 
-    /** 1. Billetera nueva del viajero: se fondea con XLM de prueba y acepta el USDC de la demo. */
+    /**
+     * 1. Billetera nueva del viajero, en UNA transacción: la cuenta de la demo la crea con el XLM mínimo
+     * y, en la misma transacción, la billetera acepta el USDC (firman las dos). Un solo bloque, sin Friendbot.
+     */
     async createWallet(secret?: string) {
       const kp = secret ? Keypair.fromSecret(secret) : Keypair.random()
       const txs: Tx[] = []
       let exists = true
       try { await server.getAccount(kp.publicKey()) } catch { exists = false }
       if (!exists) {
-        const r = await fetch(`${DEMO.friendbot}/?addr=${encodeURIComponent(kp.publicKey())}`)
-        if (!r.ok) throw new Error(`friendbot respondió ${r.status}`)
-        const body = await r.json().catch(() => ({}))
-        if (body.hash) txs.push({ hash: body.hash, what: 'Cuenta creada en testnet' })
-        txs.push(await classic(kp, Operation.changeTrust({ asset: usdc }), 'La billetera acepta USDC'))
+        txs.push(await submit(
+          [topup, kp],
+          [
+            Operation.createAccount({ destination: kp.publicKey(), startingBalance: '3' }),
+            Operation.changeTrust({ asset: usdc, source: kp.publicKey() }),
+          ],
+          'Billetera creada y lista para USDC',
+          false,
+        ))
       }
       return { kp, txs }
     },

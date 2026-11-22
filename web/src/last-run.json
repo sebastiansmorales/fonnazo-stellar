@@ -1,41 +1,37 @@
 {
- "at": "2026-11-22T04:30:13.304Z",
- "wallet": "GAKPUIHKMHIVI5WHCBLVJM3Q6TY2MRPC5FCJFTHWCVWPLIFGVKAHMR23",
+ "at": "2026-11-22T04:55:42.294Z",
+ "wallet": "GCGPPAI5QEI2MQJCCNWBKNQHDLPQ734NRO4TT4PDLKJNFGP5BUL7P5W4",
  "txs": [
   {
-   "hash": "dd9b12e3d1e5e26726f0a1ca4f7822b28269c828b83278bbbc4ceee0adb56bb6",
-   "what": "Cuenta creada en testnet"
+   "hash": "2baa8a373f8fe5789100ccf1f4a5b46daa99ce30623a45b99f19e9b1394b8bd3",
+   "what": "Billetera creada y lista para USDC"
   },
   {
-   "hash": "03e0a4c2b4d07eef63f200be62ea2311bae00713c1909ce35a4489fe8df1f40a",
-   "what": "La billetera acepta USDC"
-  },
-  {
-   "hash": "adf27dbc68184412a6f3dda2943a9ee5a216ed60aa76394e94fa00c21724a5e7",
+   "hash": "78c604112b08c8337ddd94c7e599858ab4b1725d58fd3a0bb40b943170b7a6f5",
    "what": "Recarga de 10.00 USDC"
   },
   {
-   "hash": "a1e719fb18cfe2cb634f93bf869a7ca02d00e4c0c43475292cf3805afa153b9e",
+   "hash": "6aef915fd05ce3e3e045d8f16738e3d1abd7da534e7cb368d0fcd5679afc2708",
    "what": "Tope de gasto: 5 USDC"
   },
   {
-   "hash": "01b6f09e049d43cf4b90219b44fe5a270ff5e353d62cdbab4f9025161a959d78",
+   "hash": "bef7170e75bb0aa09e09835b80bae0ddcf92acb7f0c4f3e5a22019b26d3d1da3",
    "what": "Cobro de 25 MB"
   },
   {
-   "hash": "22f9e85240e78aa6409c081541f42a43a7ae7359e8276cbf744a3e819092421f",
+   "hash": "47478b418e52276da27a6cba65672e8c64f17f4864b5f9aae2fc0f893f0d07a0",
    "what": "Cobro de 51 MB"
   },
   {
-   "hash": "f30e479de2fc125ffdf0e0c33341ae41e8370e03c75e98439a4b434eafb8903d",
+   "hash": "f57febdf5418a932e22dfd057432e8f1efb471b6201921ab665d79c3367edac0",
    "what": "Cobro de 73 MB"
   },
   {
-   "hash": "a20581c22e877e29ecbf6051dbad78b696d22d596672a7dc9fd01ffb94f9b097",
+   "hash": "afa57769359d87ee4eaf3a5da4d143cb8ae23e8219077939d4bff6604cbfaded",
    "what": "Reporte repetido (no cobra)"
   },
   {
-   "hash": "567ddc347cf8b90a77c4b2e49f004312b9dc5f115df0f174bff36d7ca17f8c79",
+   "hash": "be25b39a77b78436e67940112b171f04a2a58b4349d0f4c8c793319bc6b423d8",
    "what": "Retiro de 9.40 USDC a Bs"
   }
  ]

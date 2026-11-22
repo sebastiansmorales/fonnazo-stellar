@@ -3,15 +3,102 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fonnazo · Demo pago por MB en Stellar</title>
-    <meta name="description" content="Demo en vivo: datos móviles que se pagan por MB con USDC sobre Stellar testnet. Cada paso firma una transacción real." />
+    <title>Fonnazo · Datos móviles que se pagan por MB, sobre Stellar</title>
+    <meta name="description" content="Fonnazo vende eSIMs a viajeros bolivianos. Demo en vivo en Stellar testnet: el viajero recarga en bolivianos, tiene su saldo en USDC y un contrato Soroban le cobra solo los megas que usa. Cada paso firma una transacción real." />
+    <meta property="og:title" content="Fonnazo · Datos móviles que se pagan por MB" />
+    <meta property="og:description" content="Recargas en bolivianos, pagas por MB con un contrato en Stellar y lo que sobra sigue siendo tuyo. Demo en vivo en testnet." />
+    <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      body { margin: 0; background: #0d0616; color: #fff; font-family: Inter, system-ui, sans-serif; }
+      .static { max-width: 820px; margin: 0 auto; padding: 32px 24px; line-height: 1.6; color: #c9bbe6; }
+      .static h1, .static h2 { color: #fff; font-weight: 500; }
+      .static a { color: #b57bff; word-break: break-all; }
+    </style>
     <script src="./stellar-sdk.min.js"></script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Versión en texto del proyecto, legible sin JavaScript. La aplicación la reemplaza al cargar. -->
+      <article class="static">
+        <h1>Fonnazo: datos móviles que se pagan por MB</h1>
+        <p><strong>Demo en vivo sobre Stellar testnet · National Startups Hackathon 2026.</strong> Esta página es una demo interactiva: con JavaScript activado, cada botón firma y envía una transacción real a Stellar testnet (crear la billetera, recargar, autorizar un tope de gasto, cobrar por consumo y retirar el sobrante).</p>
+
+        <h2>Qué es Fonnazo</h2>
+        <p>Fonnazo es una app para comprar eSIMs de datos para viajar. El viajero boliviano elige su destino, paga en bolivianos con QR desde su banco y se conecta al llegar, sin chip físico y sin roaming. Es una empresa en marcha, con clientes que compran todas las semanas: ya emitió eSIMs para 29 países, con Brasil, Chile, Argentina, Perú y China como destinos principales, y tiene una comunidad de 16 mil seguidores en TikTok.</p>
+
+        <h2>El problema</h2>
+        <p>El 45 % de los datos que compran quienes usan eSIMs internacionales vence sin consumirse.</p>
+        <ul>
+          <li>Paquetes cerrados: el viajero compra 3 GB por las dudas, usa uno y el resto vence con el plan.</li>
+          <li>Pagar en dólares es difícil: desde Bolivia las tarjetas tienen topes y recargos para pagar afuera.</li>
+          <li>El sobrante no vuelve: lo que no se usó no se guarda, no se transfiere y no se devuelve.</li>
+        </ul>
+
+        <h2>La solución</h2>
+        <p>Un modo de pago por consumo real. El viajero recarga en bolivianos, tiene su saldo en dólares digitales (USDC) y un contrato en Stellar le cobra solo los megas que usa. Lo que sobra sigue siendo suyo: no vence y se puede retirar.</p>
+
+        <h2>Cómo funciona</h2>
+        <ol>
+          <li>Recarga: paga en bolivianos por QR bancario y recibe USDC en su billetera.</li>
+          <li>Tope de gasto: firma una sola vez un permiso (approve) sobre su USDC a favor del contrato medidor, con monto máximo y vencimiento. Puede bajarlo a cero cuando quiera.</li>
+          <li>Consumo: Fonnazo reporta al contrato el consumo acumulado de la eSIM. El contrato cobra solo la diferencia con transfer_from, según el precio del país. Un reporte repetido nunca cobra dos veces.</li>
+          <li>Fin del viaje: el saldo que sobra queda para el próximo viaje o se retira a bolivianos.</li>
+        </ol>
+        <p>Los precios por país quedan fijos al desplegar el contrato y no se pueden cambiar. Si no hay saldo o se llegó al tope, el cobro no pasa.</p>
+
+        <h2>Lo que funciona hoy</h2>
+        <ul>
+          <li>Contrato medidor (Soroban, Rust) desplegado en Stellar testnet: <a href="https://stellar.expert/explorer/testnet/contract/CCDP3AAQY7F2BDCHQCTOW43ZZUJDABOOKTY7BBV5AVVWRXQVSA7FZFXI">CCDP3AAQY7F2BDCHQCTOW43ZZUJDABOOKTY7BBV5AVVWRXQVSA7FZFXI</a></li>
+          <li>USDC de prueba usado por la demo: <a href="https://stellar.expert/explorer/testnet/contract/CC56NINYVIQAIGLNBBHYHWEWZCUJXE6CZWKEZIPBU7UD2SGZWZGLE74V">CC56NINYVIQAIGLNBBHYHWEWZCUJXE6CZWKEZIPBU7UD2SGZWZGLE74V</a></li>
+          <li>Además de esta demo, el mismo contrato se probó de punta a punta con una eSIM real en un teléfono: el consumo se cobró solo, cuatro veces, hasta 223 MB.</li>
+        </ul>
+
+        <h2>Ejecución verificada</h2>
+        <p>Secuencia completa corrida el 2026-11-22 en Stellar testnet. Cada enlace abre la transacción en el explorador:</p>
+        <ol>
+            <li>Billetera creada y lista para USDC: <a href="https://stellar.expert/explorer/testnet/tx/2baa8a373f8fe5789100ccf1f4a5b46daa99ce30623a45b99f19e9b1394b8bd3">2baa8a373f8fe5789100ccf1f4a5b46daa99ce30623a45b99f19e9b1394b8bd3</a></li>
+            <li>Recarga de 10.00 USDC: <a href="https://stellar.expert/explorer/testnet/tx/78c604112b08c8337ddd94c7e599858ab4b1725d58fd3a0bb40b943170b7a6f5">78c604112b08c8337ddd94c7e599858ab4b1725d58fd3a0bb40b943170b7a6f5</a></li>
+            <li>Tope de gasto: 5 USDC: <a href="https://stellar.expert/explorer/testnet/tx/6aef915fd05ce3e3e045d8f16738e3d1abd7da534e7cb368d0fcd5679afc2708">6aef915fd05ce3e3e045d8f16738e3d1abd7da534e7cb368d0fcd5679afc2708</a></li>
+            <li>Cobro de 25 MB: <a href="https://stellar.expert/explorer/testnet/tx/bef7170e75bb0aa09e09835b80bae0ddcf92acb7f0c4f3e5a22019b26d3d1da3">bef7170e75bb0aa09e09835b80bae0ddcf92acb7f0c4f3e5a22019b26d3d1da3</a></li>
+            <li>Cobro de 51 MB: <a href="https://stellar.expert/explorer/testnet/tx/47478b418e52276da27a6cba65672e8c64f17f4864b5f9aae2fc0f893f0d07a0">47478b418e52276da27a6cba65672e8c64f17f4864b5f9aae2fc0f893f0d07a0</a></li>
+            <li>Cobro de 73 MB: <a href="https://stellar.expert/explorer/testnet/tx/f57febdf5418a932e22dfd057432e8f1efb471b6201921ab665d79c3367edac0">f57febdf5418a932e22dfd057432e8f1efb471b6201921ab665d79c3367edac0</a></li>
+            <li>Reporte repetido (no cobra): <a href="https://stellar.expert/explorer/testnet/tx/afa57769359d87ee4eaf3a5da4d143cb8ae23e8219077939d4bff6604cbfaded">afa57769359d87ee4eaf3a5da4d143cb8ae23e8219077939d4bff6604cbfaded</a></li>
+            <li>Retiro de 9.40 USDC a Bs: <a href="https://stellar.expert/explorer/testnet/tx/be25b39a77b78436e67940112b171f04a2a58b4349d0f4c8c793319bc6b423d8">be25b39a77b78436e67940112b171f04a2a58b4349d0f4c8c793319bc6b423d8</a></li>
+        </ol>
+
+        <h2>Frente a las alternativas</h2>
+        <ul>
+          <li>Paquete por GB: no se paga por consumo, el saldo no es del usuario, no se recarga en bolivianos y los cobros no son verificables.</li>
+          <li>Pago por consumo con crédito de tienda: se paga por consumo, pero el saldo no se retira ni se transfiere y exige tarjeta internacional.</li>
+          <li>Fonnazo: se paga solo lo consumido, el saldo es del usuario, se recarga en bolivianos sin tarjeta internacional y cada cobro se puede verificar en la red.</li>
+        </ul>
+
+        <h2>Por qué Stellar</h2>
+        <ul>
+          <li>Comisiones mínimas: una transferencia cuesta alrededor de 0,001 XLM, así que cobrar cada bloque de megas es viable.</li>
+          <li>USDC nativo: dólares digitales emitidos en la red, sin puentes.</li>
+          <li>Contratos Soroban: el medidor fija el precio por país, el tope lo pone el usuario y cada cobro queda registrado.</li>
+        </ul>
+
+        <h2>Modelo de negocio</h2>
+        <p>Margen por MB sobre el costo mayorista del mega, que no depende de que el cliente desperdicie datos. Se activa como un modo más de la app para los clientes actuales, sin costo de adquisición nuevo.</p>
+
+        <h2>Qué es real y qué se simula en la demo</h2>
+        <p>Reales: el contrato, la billetera, el permiso de gasto, cada cobro y el retiro son transacciones en Stellar testnet. Simulados: el pago por QR en bolivianos y el retiro al banco (en producción los hace un proveedor de pagos regulado en Bolivia) y el consumo de datos, que en la demo se dispara con botones. El USDC es un token de prueba sin valor y los precios son ilustrativos.</p>
+
+        <h2>Lo que sigue</h2>
+        <ol>
+          <li>Billetera Fonnazo dentro de la app, con un custodio registrado, para que el usuario no maneje llaves.</li>
+          <li>Recarga y retiro en bolivianos con un proveedor de pagos regulado.</li>
+          <li>Piloto con clientes actuales, todavía en testnet.</li>
+        </ol>
+
+        <p>Código y contrato: <a href="https://github.com/sebastiansmorales/fonnazo-stellar">https://github.com/sebastiansmorales/fonnazo-stellar</a> · <a href="https://fonnazo.com">fonnazo.com</a></p>
+      </article>
+    </div>
     <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
