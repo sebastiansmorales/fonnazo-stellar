@@ -99,6 +99,17 @@ Es un dato propio de Fonnazo, no un estudio de mercado: sobre las eSIMs que vend
 - **Precio:** cada país tiene un precio por GB fijado en el contrato, igual al costo mayorista más el margen. Los precios de los despliegues en testnet son de prueba.
 - **Qué cambia:** hoy parte del margen viene de los GB que el cliente paga y no usa. En el modo por MB ese ingreso desaparece y el margen se gana sobre cada MB consumido. La hipótesis es que se compensa con un precio por MB más alto que el de un paquete grande, y con más uso y recompra de quien hoy no compra por miedo a desperdiciar. El piloto con clientes es para medir eso; todavía no está demostrado.
 
+Números para Brasil, nuestro destino principal (en USD):
+
+| | Viaje liviano (1,1 GB) | Viaje normal (3 GB) |
+|---|---|---|
+| Ingreso a 4,00 USDC/GB | 4,40 | 12,00 |
+| Costo de datos a 1,80/GB | 1,98 | 5,40 |
+| Costo fijo por eSIM activa al mes | 0,80 | 0,80 |
+| **Margen** | **1,62 (37 %)** | **5,80 (48 %)** |
+
+El precio de 4,00 USDC/GB es el de la demo y sirve de referencia. El costo cambia mucho según el país, por eso el contrato lleva un precio por país. La tabla no incluye la comisión de la rampa en bolivianos ni costos fijos de plataforma.
+
 ## Rampa bolivianos ↔ USDC y custodia
 
 - **Hoy (demo):** la recarga y el retiro se simulan. El USDC es un token de prueba emitido por nosotros.
